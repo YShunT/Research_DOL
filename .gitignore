@@ -1,0 +1,15 @@
+.DS_Store
+.venv/
+__pycache__/
+.pytest_cache/
+
+/raw/
+/datasets/**/*.npz
+/datasets/**/*.npy
+/source/
+/tmp/
+/make_code/tests/
+/visualizations/
+/experiments/**/checkpoints/
+/experiments/**/arrays/
+/experiments/**/attempts/
