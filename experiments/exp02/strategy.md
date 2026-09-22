@@ -1,4 +1,4 @@
-# exp02：NAPL型の地点別LSL重みの低ランク化（計画・未実装・未実行）
+# exp02：NAPL型の地点別LSL重みの低ランク化（実装済み・未実行）
 
 ## 実験目的
 
@@ -95,6 +95,8 @@ Matplotlibで`figures/rank_vs_metrics.png`を作る。**2×2の4パネル**で�
 
 基底`B_k`の個々の意味は一意でない。可逆な基底変換でも`EB`が同じなら予測は変わらず、LSLのReLUによって重みの変化量と出力の変化量も一致しない。個々の「第1基底＝特定の需要現象」とは命名せず、**共有される更新部分空間、地点別の補正関数、予測改善**を解釈する。元LSLのonline更新の関数的rankをさらに直接測るにはexp01のonline snapshotが必要なので、計測付き再実行を別途明記する。
 
+分布変化の実装は、train統計で標準化した系列に固定乱数の16次元RFF（RBF-MMDの近似）を適用し、直前2週の特徴平均の距離を地点別に測る。境界はtrain週ペアの距離の90パーセンタイルで先に固定する。
+
 ## 人流に限定しない設計上の境界
 
 Chicago-Tは**最初の制御された検証対象**であり、この1データで「変化する時空間データ一般に有効」とは結論しない。モデル実装では地点数`N`、特徴チャネル数`C`、LSL中間幅`m`を設定から取り、1地点の重み長`P=2Cm+m+C`、`θ_shared∈R^P`、`E∈R^(N×r)`、`B∈R^(r×P)`として構築する。Chicago-Tの`N=77,C=32,m=4,P=292`は実験値であってモデルの固定値ではない。入力変数が複数あるデータに広げるときは入力射影の入力チャネルも可変にする必要がある。
@@ -126,6 +128,7 @@ experiments/exp02/
 │   ├── rank_vs_adaptation_gain.png
 │   ├── rank_vs_cost.png
 │   ├── accuracy_vs_update_cost.png
+│   ├── rank_vs_lsl_change.png
 │   └── rank_vs_lsl_function_error.png
 ├── variants/
 │   ├── with_shared/r<rank>/seeds/seed<seed>/
@@ -139,4 +142,26 @@ experiments/exp02/
 └── diagnostics/distillation/         # exp01のLSL関数を近似する補助診断
 ```
 
-図の出力先は**`experiments/exp02/figures/`に統一。地点別ヒートマップなど追加の画像もここに保存する。checkpointと大きな予測配列はGit対象外。**現時点では実装・GPU実験とも未実施で、図も未生成、実行コマンドはまだない。**
+図の出力先は`experiments/exp02/figures/`に統一する。地点別ヒートマップなど追加の画像もここに保存する。checkpointと逐次診断の`arrays/`はGit対象外。**実装・合成データでの検証は完了、全rankのGPU本実験は未実行で、図も未生成。**
+
+## 実行方法
+
+コード、依存、計画をcommitした後、リポジトリルートで実行する。`--run`は既定で事前設定した全rank・5 seedを順次実行し、完了済み条件は検証してスキップする。小規模な接続確認として、最初にseed 42・rank 8だけを実行することもできる。これは本計画からrankを除外・選抜する操作ではない。
+
+```bash
+uv run --offline --no-sync python src/run_exp02.py --run --seed 42 --rank 8
+uv run --offline --no-sync python src/run_exp02.py --run
+```
+
+中断・失敗した条件は、`--retry-failed`を明示した場合だけ従前の成果物を`attempts/`へ退避して再試行する。完了済みcheckpointは保持する。
+
+```bash
+uv run --offline --no-sync python src/run_exp02.py --run --retry-failed
+```
+
+保存済み結果からPNGだけを再生成する場合、およびexp01のLSL補正関数の固定バックボーン蒸留を別途実行する場合は次を使う。蒸留は教師のtrain入力の固定間引き1024窓で学生LSLを学習し、validationの256窓で関数・予測誤差を測る。
+
+```bash
+uv run --offline --no-sync python src/run_exp02.py --plot
+uv run --offline --no-sync python src/run_exp02.py --distill
+```

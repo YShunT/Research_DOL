@@ -110,6 +110,7 @@ class DOLForecastModel(nn.Module):
         data_config: DataConfig,
         model_config: ModelConfig,
         adaptive_initial_adjacency: Tensor | None = None,
+        location_learner: nn.Module | None = None,
     ) -> None:
         super().__init__()
         self.data_config = data_config
@@ -123,7 +124,7 @@ class DOLForecastModel(nn.Module):
             out_channels=model_config.residual_channels,
             kernel_size=1,
         )
-        self.location_specific = LocationSpecificLearner(
+        self.location_specific = location_learner or LocationSpecificLearner(
             num_nodes=data_config.num_nodes,
             channels=model_config.residual_channels,
             bottleneck_channels=model_config.lsl_bottleneck_channels,
@@ -232,13 +233,21 @@ class DOLForecastModel(nn.Module):
                     "inputs and supports must use the same device and dtype"
                 )
 
-    def freeze_for_online_adaptation(self) -> None:
+    def freeze_for_online_adaptation(self, mode: str = "all") -> None:
         """全体を凍結し、Location-Specific Learnerだけを学習可能にする。"""
 
+        if mode not in {"all", "coefficients", "none"}:
+            raise ValueError(f"unknown online update mode: {mode}")
         for parameter in self.parameters():
             parameter.requires_grad_(False)
-        for parameter in self.location_specific.parameters():
-            parameter.requires_grad_(True)
+        if mode == "all":
+            for parameter in self.location_specific.parameters():
+                parameter.requires_grad_(True)
+        elif mode == "coefficients":
+            coefficients = getattr(self.location_specific, "E", None)
+            if coefficients is None:
+                raise ValueError("coefficient update requires a positive-rank NAPL learner")
+            coefficients.requires_grad_(True)
         # evalでも勾配計算は可能。BN統計とDropoutをwarm-up時の状態に固定する。
         self.eval()
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import time
 
 import torch
 from torch import Tensor
@@ -27,6 +28,8 @@ class OnlineStepResult:
     update_mae: float | None
     released_samples: int
     replay_size: int
+    update_seconds: float = 0.0
+    inference_seconds: float = 0.0
 
 
 class OnlineAdapter:
@@ -55,13 +58,15 @@ class OnlineAdapter:
         config: ExperimentConfig,
         optimizer: Optimizer,
         replay: ReservoirReplayBuffer,
+        update_mode: str = "all",
     ) -> None:
         self.model = model
         self.scaler = scaler
         self.config = config
         self.device = _resolve_device(config.runtime.device)
         self.model.to(self.device)
-        self.model.freeze_for_online_adaptation()
+        self.model.freeze_for_online_adaptation(update_mode)
+        self.update_mode = update_mode
         self.fixed_supports = [
             support.to(self.device, dtype=torch.float32) for support in fixed_supports
         ]
@@ -136,8 +141,15 @@ class OnlineAdapter:
             self.replay.add(sample.inputs, sample.target)
 
         phase = self.schedule.phase
-        update_loss = self._update_from_replay() if self.schedule.is_awake else None
+        update_started = time.perf_counter()
+        update_loss = (
+            self._update_from_replay()
+            if self.schedule.is_awake and self.update_mode != "none"
+            else None
+        )
+        update_seconds = time.perf_counter() - update_started if update_loss is not None else 0.0
 
+        inference_started = time.perf_counter()
         self.model.eval()
         inputs_device = inputs.to(self.device, dtype=torch.float32)
         with torch.no_grad():
@@ -151,6 +163,7 @@ class OnlineAdapter:
         target_original = self.scaler.inverse_transform(
             target_device.detach().cpu()
         ).clamp_min(0)
+        inference_seconds = time.perf_counter() - inference_started
 
         self.delay_queue.submit(
             inputs=inputs_device.squeeze(0),
@@ -171,6 +184,8 @@ class OnlineAdapter:
             update_mae=update_loss,
             released_samples=len(released),
             replay_size=len(self.replay),
+            update_seconds=update_seconds,
+            inference_seconds=inference_seconds,
         )
         self.step += 1
         return result
