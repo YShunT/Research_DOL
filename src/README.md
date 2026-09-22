@@ -7,7 +7,7 @@
 - データ、モデル、warm-up、online、評価を責務ごとのmoduleへ分け、読みやすくする。
 - CLIの`argparse`は使わず、dataclassの設定をPythonから明示的に渡す。
 - module内部で`.cuda()`を呼ばない。モデル、入力、グラフ支持行列を実行側で同じdeviceへ置く。
-- importしただけでは学習を開始しない。[`run_dol.py`](run_dol.py)を直接実行した場合だけ実験を開始する。
+- importしただけでは学習を開始しない。[`run_dol.py`](run_dol.py)または[`run_exp01.py`](run_exp01.py)を直接実行した場合だけ実験を開始する。
 
 数式、Tensor形状、各クラスの役割、公開実装との差も本READMEにまとめる。
 
@@ -42,7 +42,7 @@ online: LSLの22,484パラメータだけ更新
   ├─ 8標本のEpisodic Memory
   └─ 1週間Awake / 1週間Hibernate
   ↓
-MAE / RMSE / WMAPE（全体・ホライズン別）
+MAE / global RMSE / WMAPE（全体・ホライズン別）＋sample-wise RMSE（補助）
 ```
 
 ## 2 ディレクトリ構成
@@ -51,10 +51,10 @@ MAE / RMSE / WMAPE（全体・ホライズン別）
 src/
 ├── README.md
 ├── run_dol.py
-├── tests/
-│   └── test_checkpoint_reuse.py
+├── run_exp01.py
 └── dol/
     ├── artifacts.py
+    ├── multiseed.py
     ├── config.py
     ├── pipeline.py
     ├── data/
@@ -92,14 +92,22 @@ DOL実験の入口である。全体の流れは次のようになる。
 ```python
 from run_dol import main
 
-main(experiment_name="exp01")  # warm-up後、online用にmodel/optimizer/SMBを新規構築
+main(experiment_name="exp02")  # warm-up後、online用にmodel/optimizer/SMBを新規構築
 ```
 
-引数なしなら次の`exp<ii>`を割り当て、`exp01`のような引数があれば未実行の同名ディレクトリを使う。`--reuse-checkpoint`付きなら完了済み番号のwarm-up checkpointを残し、旧ログ・指標を`attempts/`へ退避してonlineだけ再実行する。`if __name__ == "__main__":`の内側でだけ`main()`を呼ぶため、他のコードからimportしても実験は始まらない。
+引数なしなら次の`exp<ii>`を割り当て、`exp02`のような引数があれば未実行の同名ディレクトリを使う。`--reuse-checkpoint`付きなら完了済み番号のwarm-up checkpointを残し、旧ログ・指標を`attempts/`へ退避してonlineだけ再実行する。`if __name__ == "__main__":`の内側でだけ`main()`を呼ぶため、他のコードからimportしても実験は始まらない。
+
+#### [`run_exp01.py`](run_exp01.py)
+
+Chicago-Tのseed 42〜46を独立に実行する入口。`--retry-failed`を付けた場合だけ失敗・中断した試行を退避して再実行する。単発用の`run_dol.py exp01`では5 seedにならない。
+
+#### [`dol/multiseed.py`](dol/multiseed.py)
+
+exp01の順次実行と集計を担当する。実行開始時のGit revisionと入力データのSHA-256を固定し、各seedの設定、checkpoint、処理件数、指標を検証する。MAE・global RMSE・sample-wise RMSE・WMAPEをseed間で平均・標本標準偏差に集計し、論文値との相対差も記録する。完了済みseedはスキップし、失敗・中断試行の旧成果物は`attempts/`へ退避する。
 
 #### [`dol/artifacts.py`](dol/artifacts.py)
 
-実験番号と成果物を管理する。`experiments/_template`を新しい`exp<ii>`へ複製し、`config.json`、`git_commit.txt`、`run.log`、`metrics.json`を安全に作成する。既に実行結果があるディレクトリは通常上書きしない。checkpoint再利用時は旧記録だけ退避する。予測配列を保存する設定では、Git対象外の`arrays/predictions.npy`と`arrays/targets.npy`も作る。
+実験名と成果物を管理する。単発の`exp<ii>`に加えてexp01内の`seed<ii>`にも対応する。ローカルに`experiments/_template`があれば新しい単発実験へ複製するが、Git対象外であり、なくても必要な文書を生成する。seed別試行では直下に計画・レポートを置くため、文書の自動生成を抑える。`config.json`、`git_commit.txt`、`run.log`、`metrics.json`を安全に作成する。既に実行結果があるディレクトリは通常上書きしない。checkpoint再利用時は旧記録だけ退避する。予測配列を保存する設定では、Git対象外の`arrays/predictions.npy`と`arrays/targets.npy`も作る。
 
 #### [`dol/config.py`](dol/config.py)
 
@@ -316,7 +324,7 @@ online開始前: 新しいSMBへvalidationを1回だけ投入
 
 |ファイル・ディレクトリ|役割|
 |---|---|
-|`pyproject.toml`|Pythonの範囲、依存関係、build・pytest設定を宣言|
+|`pyproject.toml`|Pythonの範囲、依存関係、build設定を宣言|
 |`uv.lock`|推移依存を含む解決結果を固定|
 |`.python-version`|rawの検証環境に合わせてPython 3.11を指定|
 |`.venv/`|uvが同期するローカル仮想環境|
@@ -362,10 +370,10 @@ config = ExperimentConfig(runtime=RuntimeConfig(device="cpu"))
 uv run python src/run_dol.py
 ```
 
-未実行の番号（例：`exp01`）へ結果を保存する場合は次のように指定する。実行済みの`exp00`は通常の実行では上書きできない。
+未実行の番号（例：`exp02`）へ単発の結果を保存する場合は次のように指定する。実行済みの`exp00`は通常の実行では上書きできない。`exp01`は5 seed再現計画用に予約している。
 
 ```bash
-uv run python src/run_dol.py exp01
+uv run python src/run_dol.py exp02
 ```
 
 実行済みディレクトリは通常上書きしない。既存checkpointから同じ番号のonlineだけをやり直す場合は、次を実行する。旧ログ・指標・設定は`attempts/`へ退避され、checkpointは保持される。
@@ -376,12 +384,19 @@ uv run --offline --no-sync python src/run_dol.py exp00 --reuse-checkpoint
 
 `--no-sync`は既に同期済みの`.venv`を使う指定で、uvキャッシュ削除後に`--offline`で実行する場合に必要になることがある。
 
+exp01の5 seed（42〜46）は単発CLIではなく`src/run_exp01.py`で順番に実行する。実験前にコード・計画をcommitし、作業ツリーをきれいにする。途中まで完了した場合は完了済みseedを検証してスキップし、失敗・中断したseedだけを再試行するには`--retry-failed`を付ける。各seedの`metrics.json`にsample-wise RMSEも保存し、exp01直下の`metrics.json`に4指標の平均・標本標準偏差を保存する。
+
+```bash
+uv run --offline --no-sync python src/run_exp01.py
+uv run --offline --no-sync python src/run_exp01.py --retry-failed
+```
+
 ### 4.3 `exp<ii>`のファイルとコードの関係
 
 ```text
 run_dol.py
   ├─ artifacts.create_experiment_run()
-  │    ├─ _template → exp<ii>
+  │    ├─ ローカル_templateがあればexp<ii>へ複製
   │    ├─ config.json
   │    ├─ git_commit.txt
   │    └─ run.log
@@ -399,7 +414,7 @@ run_dol.py
 
 |成果物|対応するコード|用途|
 |---|---|---|
-|`strategy.md`|`experiments/_template`から複製|実行前の仮説と変更点を人が記述|
+|`strategy.md`|ローカル雛形から複製、なければ自動生成|実行前の仮説と変更点を人が記述|
 |`config.json`|`ExperimentConfig`を`artifacts.py`が直列化|使用条件の再確認|
 |`git_commit.txt`|`artifacts.py`|コードrevisionと未commit変更の有無|
 |`run.log`|`run_dol.py`のlogger|warm-up各epoch、online 1,000件ごとの進捗、例外|
@@ -409,6 +424,8 @@ run_dol.py
 |`arrays/targets.npy`|`OnlineEvaluation.targets`|予測と対応する同shapeの正解|
 |`figures/`|後段の分析|レポート用の図|
 |`report.md`|人|結果の解釈と次の実験|
+
+`git_commit.txt`の`commit`は実行開始時のGitコミットID、`dirty`はその時点に未コミット変更があったかを表す。これはモデル重みやGitの署名ではなく、結果を生成したコード版をたどるための記録である。exp01は開始時の同一revisionを各seedへ引き継ぐため、実験中にログ・指標が増えてもseed間で記録が変わらない。
 
 `run.log`は進捗と終了値を検証できるようGitで追跡する。`strategy.md`、`config.json`、`git_commit.txt`、`metrics.json`、必要な図、`report.md`も実験記録としてcommitする。checkpointとnpyは容量が大きいため除外する。
 
@@ -421,7 +438,7 @@ from run_dol import main
 config = ExperimentConfig(
     artifacts=ArtifactConfig(save_predictions=True),
 )
-main(experiment_name="exp01", config=config)
+main(experiment_name="exp02", config=config)
 ```
 
 Chicago-T既定条件では予測と正解を合わせて大きな容量になるため、`save_predictions=False`が既定値である。
@@ -462,17 +479,7 @@ print(online.metrics)
 online = run_online_evaluation(components, max_steps=100)
 ```
 
-## 5 テスト
-
-`src/tests/`の2件は、checkpoint再利用時の旧記録の退避・checkpoint保持・実行中ジョブの保護を検査する継続的な回帰テストなので残す。GPU 2ステップのスモークテストは別途手動で行い、validation 7,002件の1回投入とLSL重みの変化を確認した。一時的な検証用Pythonファイルはリポジトリルートの`tmp/`へ置き、Gitには含めない。
-
-```bash
-uv run --offline --no-sync pytest -q src/tests
-```
-
-全期間の実験とは別に、合成Tensorによるshape・数式・勾配・因果順序のテスト拡充が必要である。
-
-## 6 公開実装の挙動を保った整理
+## 5 公開実装の挙動を保った整理
 
 |公開実装の状態|この再実装|
 |---|---|
@@ -489,29 +496,29 @@ uv run --offline --no-sync pytest -q src/tests
 
 入力埋め込み、地点別LSL、Graph WaveNet、$XA$型グラフ伝播、未使用`residual_convs`を含む初期化順、warm-up、SMB/EM、AH境界は公開実装に合わせる。onlineのoptimizerはcheckpoint-only経路と同じく新規作成する。
 
-## 7 実装上の重要な判断
+## 6 実装上の重要な判断
 
-### 7.1 0需要をmaskしない
+### 6.1 0需要をmaskしない
 
 Chicago-Tの0は欠損ではなく実際の需要0である。この再実装は全要素を含むMAEを使う。公開実装のクラス`MaskedMAE`も既定の`null_val=np.nan`ではNaNだけを除き、0を含めるため、この点の損失定義は一致する。関数名だけを見て「0を除外する」と解釈してはいけない。
 
-### 7.2 online更新ではmodelをeval modeにする
+### 6.2 online更新ではmodelをeval modeにする
 
 更新対象はLSLだけだが、損失の勾配は固定backboneを通ってLSLへ戻る。`eval()`は勾配を無効にしない。BatchNormのrunning statisticsとDropoutだけが固定される。公開実装も`test()`冒頭で`model.eval()`を呼んだままオンライン逆伝播するため、この挙動と一致する。
 
-### 7.3 教師はHステップ後に利用する
+### 6.3 教師はHステップ後に利用する
 
 未来12点のうち最初の1点だけが観測された段階では、12ホライズン損失を計算できない。全12点が観測されるまで待ち、1つの完全な教師窓としてSMBへ入れる。
 
-### 7.4 予測は休眠中も止めない
+### 6.4 予測は休眠中も止めない
 
 Hibernateは学習更新を止める状態であり、推論停止ではない。全online窓で予測・評価を続ける。
 
-## 8 論文・公開実装との照合結果
+## 7 論文・公開実装との照合結果
 
 2026年9月19日に、DOL論文のMethodology・Algorithm 1・Experimental Settings、`raw/DOL_original`、この実装を項目別に照合した。
 
-### 8.1 方法の中心部分
+### 7.1 方法の中心部分
 
 次は論文と一致する。
 
@@ -525,7 +532,7 @@ Hibernateは学習更新を止める状態であり、推論停止ではない�
 - AdamW、学習率0.001、最大150 epoch、patience 10。
 - MAE、RMSE、WMAPEによる評価。
 
-### 8.2 公開コード互換の実行詳細
+### 7.2 公開コード互換の実行詳細
 
 - trainの端数batchを捨て、各epoch後に学習率を0.5倍する。
 - Python、NumPy、PyTorch、CUDAのseed offsetと、cuDNN deterministic・TF32無効の既定設定を保つ。
@@ -535,27 +542,27 @@ Hibernateは学習更新を止める状態であり、推論停止ではない�
 - future targetは、公開実装のrecall Tensorと同じ$H$ステップ後に解禁する。
 - forwardで使われない`residual_convs`も、パラメータ数と初期化順の互換のため登録する。
 
-### 8.3 完全再現ではない部分
+### 7.3 完全再現ではない部分
 
 - 論文の定義には外部要因$E$があるが、公開コードもこの再実装も日時特徴を予測器へ入力しない。AH周期は経過ステップ数で管理する。
 - 固定支持行列は公開実装のSciPyではなくPyTorchで同じ式とdtype変換順を計算する。配布Chicago-Tでは順・逆方向とも要素が一致したが、別環境では浮動小数点の末尾が異なる可能性がある。
 - SMBと遅延教師は公開実装と同じくGPUに常駐する。SMBは固定容量Tensorで保持し、EM抽出はGPU上で行う。
 - 評価指標は公開実装と同じく予測・正解をCPUで連結し、NumPyで一括集計する。
 - 現在のデータローダーはChicago-Tだけであり、Singapore-T、METR-LA、PEMS-BAYには未対応である。
-- 論文の5 seed集約、t検定、13ベースライン、各アブレーション、推論時間計測は未実装である。
+- exp01用のChicago-T 5 seed集約は実装済みだが、GPU実験は未実行である。t検定、13ベースライン、各アブレーション、推論時間計測は未実装である。
 
-したがって、**Chicago-Tの公開実装を読みやすく再構成し、主要な実行ロジックと固定入力のforward出力を合わせた実装である**。論文Table 2--4全体の再現には、他データセット、5 seed集約、比較手法も必要になる。
+したがって、**Chicago-Tの公開実装を読みやすく再構成し、主要な実行ロジックと固定入力のforward出力を合わせた実装である**。論文Table 2--4全体の再現には、他データセットと比較手法の実装・実行も必要になる。
 
-## 9 現在の制約
+## 8 現在の制約
 
 - `OnlineConfig.learning_rate`と`weight_decay`は記録用で、現行CLIのオンラインoptimizerには反映されない。新しいoptimizerも`WarmupConfig`の値を使う。`OnlineConfig.batch_size`もDataLoaderへは渡さず、raw互換の1に固定している。既定設定では学習率とweight decayが両設定で一致する。
 - 対応ローダーはChicago-Tである。METR-LA、PEMS-BAY、Singapore-Tは、同じ`TimeWindowDataset`へ`(T,N)` Tensorを渡すローダーを追加すれば使える。
-- 基本的なepoch・online進捗ログと実験成果物は保存するが、複数seedの自動集約と図の自動生成はまだ実行パイプラインへ含めていない。
+- exp01では複数seedの自動集約を実装したが、図の自動生成は実行パイプラインへ含めていない。
 - グラフ伝播方向と層構成は合っているが、module名が異なるため公開checkpointをそのまま`load_state_dict`で読み込めない。
 - 論文の統計的有意差検定は、複数seedの実験結果が必要であり、この実装ファイルだけでは実行しない。
 - `raw/`は参照専用としてimportせず、互換性は固定入力と実験指標で検証する。
 
-## 10 推奨する読み順
+## 9 推奨する読み順
 
 1. [`dol/config.py`](dol/config.py)：既定値と受容野。
 2. [`dol/layers/LSL.py`](dol/layers/LSL.py)：地点別補正。

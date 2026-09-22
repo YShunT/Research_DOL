@@ -73,13 +73,29 @@
 - `exp00`の単一seed結果について論文値からの絶対差と相対差を記録する。後続の計5 seedでは平均±標準偏差を計算し、論文の集計単位に合わせる。
 - 処理時間はGPUや実行環境に依存するため参考値とし、論文との直接的な速度再現判定には用いない。
 
-### 実行手順
+### セットアップと実行
+
+リポジトリのルートで`uv sync`を実行し、[著者のデータ配布先](https://drive.google.com/drive/folders/1fpHzT_jyoHhr2uQA10-v3JTcoHCVc8IU?usp=drive_link)から`chicago20_23.npz`と`adj_chicago.npy`を取得して`datasets/chicago-t/`へ配置する。形式は[datasets/chicago-t/README.md](../../datasets/chicago-t/README.md)を参照。数値条件の定義は[`src/dol/config.py`](../../src/dol/config.py)、実装の説明は[`src/README.md`](../../src/README.md)にある。
+
+初回にwarm-upから実行する場合は、未実行の実験ディレクトリを指定する（`exp00`は実行済み）。単発実験は引数なしなら次の未使用番号を自動作成できる。未コミット変更がある場合は`git_commit.txt`の`dirty`に記録される。
+
+```bash
+# 初回実行時のみ（現在のexp00は実行済み）
+uv run python src/run_dol.py exp00
+# 新しい番号を自動割り当てする場合
+uv run python src/run_dol.py
+```
+
+本実験で行ったcheckpoint再利用によるonline再実行は、**ローカルに`experiments/exp00/checkpoints/warmup.pt`がある場合のみ**次を使う。公開リポジトリには結果の[レポート](report.md)・[指標](metrics.json)を含むが、checkpointは含めないため、clone直後にはこの再実行はできない。online開始時には新しいoptimizer（学習率0.001）と空のSMBを作り、validationを1回投入する。
+
+```bash
+uv run --offline --no-sync python src/run_dol.py exp00 --reuse-checkpoint
+```
 
 1. 実行前のcommit、dirty状態、設定値を記録する。
-2. `uv run --offline --no-sync python src/run_dol.py exp00 --reuse-checkpoint`で既存checkpointからonlineだけ実行する。
-3. checkpointのSHA-256が不変で、`config.json`、`git_commit.txt`、`run.log`、`metrics.json`が新試行を記録し、旧記録が`attempts/`に退避されたことを確認する。
-4. `report.md`に論文値との差、学習曲線、更新回数、失敗や実装差を記録する。
-5. 同じ設定でseedだけを変えた後続実験を行い、5 seed集計で最終的な再現可否を判断する。
+2. checkpointのSHA-256が不変で、`config.json`、`git_commit.txt`、`run.log`、`metrics.json`が新試行を記録し、旧記録が`attempts/`に退避されたことを確認する。
+3. `report.md`に論文値との差、学習曲線、更新回数、失敗や実装差を記録する。
+4. 同じ設定でseedだけを変えた後続実験を行い、5 seed集計で最終的な再現可否を判断する。
 
 ## 成功条件
 

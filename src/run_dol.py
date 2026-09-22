@@ -13,7 +13,7 @@ from pathlib import Path
 
 import torch
 
-from dol.artifacts import create_experiment_run
+from dol.artifacts import GitState, create_experiment_run
 from dol.config import ExperimentConfig
 from dol.pipeline import (
     build_components,
@@ -53,6 +53,8 @@ def main(
     experiment_name: str | None = None,
     config: ExperimentConfig | None = None,
     reuse_checkpoint: bool = False,
+    git_state: GitState | None = None,
+    create_human_documents: bool = True,
 ) -> None:
     config = config or ExperimentConfig()
     if reuse_checkpoint and experiment_name is None:
@@ -66,6 +68,8 @@ def main(
         config,
         experiment_name,
         reuse_checkpoint=reuse_checkpoint,
+        git_state=git_state,
+        create_human_documents=create_human_documents,
     )
     logger = experiment.logger
     checkpoint = experiment.paths.checkpoints / "warmup.pt"

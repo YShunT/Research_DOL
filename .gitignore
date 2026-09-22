@@ -11,3 +11,5 @@ __pycache__/
 /visualizations/
 /experiments/**/checkpoints/
 /experiments/_template/
+/src/tests/
+/experiments/**/attempts/

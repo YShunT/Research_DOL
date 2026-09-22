@@ -19,6 +19,7 @@ from .config import ExperimentConfig
 
 
 _EXPERIMENT_PATTERN = re.compile(r"^exp(\d+)$")
+_SEED_PATTERN = re.compile(r"^seed\d+$")
 
 
 @dataclass(frozen=True)
@@ -107,6 +108,8 @@ def create_experiment_run(
     experiment_name: str | None = None,
     *,
     reuse_checkpoint: bool = False,
+    git_state: GitState | None = None,
+    create_human_documents: bool = True,
 ) -> ExperimentRun:
     """templateから新しい実験を作り、設定とGit状態を記録する。
 
@@ -117,7 +120,7 @@ def create_experiment_run(
 
     experiments_root = Path(config.artifacts.experiments_root)
     template_root = experiments_root / "_template"
-    git_state = capture_git_state(Path.cwd())
+    git_state = git_state or capture_git_state(Path.cwd())
 
     experiments_root.mkdir(parents=True, exist_ok=True)
     if reuse_checkpoint and experiment_name is None:
@@ -127,8 +130,11 @@ def create_experiment_run(
         experiment_root = _reserve_next_experiment(experiments_root)
         newly_created = True
     else:
-        if _EXPERIMENT_PATTERN.fullmatch(experiment_name) is None:
-            raise ValueError("experiment_name must have the form exp<ii>")
+        if (
+            _EXPERIMENT_PATTERN.fullmatch(experiment_name) is None
+            and _SEED_PATTERN.fullmatch(experiment_name) is None
+        ):
+            raise ValueError("experiment_name must have the form exp<ii> or seed<ii>")
         experiment_root = experiments_root / experiment_name
         if experiment_root.exists():
             newly_created = False
@@ -150,7 +156,8 @@ def create_experiment_run(
     paths = ExperimentPaths.from_root(experiment_root)
     paths.checkpoints.mkdir(parents=True, exist_ok=True)
     paths.figures.mkdir(parents=True, exist_ok=True)
-    _ensure_human_documents(paths)
+    if create_human_documents:
+        _ensure_human_documents(paths)
     started_at = datetime.now().astimezone().isoformat(timespec="seconds")
     write_json(paths.config, asdict(config))
     write_json(paths.metrics, {"status": "running", "started_at": started_at})
