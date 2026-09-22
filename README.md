@@ -1,10 +1,10 @@
 # 研究リポジトリ
 
-DOL（Distribution-Aware Online Learning）の公開実装を、実行ロジックを保ちながら読みやすく再構成する研究リポジトリである。`raw/`は参照専用とし、実際の実験には`src/`を使う。
+DOL（Distribution-Aware Online Learning for Urban Spatiotemporal Forecasting on
+Streaming Data）の公開実装を、実行ロジックを保ちながら読みやすく再構成する研究リポジトリである。`raw/`は参照専用とし、実際の実験には`src/`を使う。
 
 このリポジトリの `src/` は[著者公開の DOL 実装](https://github.com/cwang-nus/DOL)を参考に再構成したものです。元実装のライセンス表示は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) に保存しています。`raw/` と処理済みデータ、学習済み checkpoint は GitHub には含めません。
 
-実験ごとの目的・条件・準備・実行方法は、[exp00の計画](experiments/exp00/strategy.md)と[exp01の計画](experiments/exp01/strategy.md)に記録している。実装の構成と各モジュールの役割は[src/README.md](src/README.md)を参照。
 
 ## 最新の構成
 

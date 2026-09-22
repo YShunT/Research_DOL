@@ -1,0 +1,154 @@
+2026-09-22 15:50:09 | INFO | experiment=seed44
+2026-09-22 15:50:09 | INFO | directory=experiments/exp01/seeds/seed44
+2026-09-22 15:50:09 | INFO | git_commit=eeae0c53d406d4f7162eadeabc7a5513d29d5135 dirty=False
+2026-09-22 15:50:09 | INFO | building data, graph, model, optimizer, and SMB
+2026-09-22 15:50:20 | INFO | model parameters=329252 online_parameters=22484
+2026-09-22 15:50:20 | INFO | warm-up started checkpoint=experiments/exp01/seeds/seed44/checkpoints/warmup.pt
+2026-09-22 15:51:41 | INFO | warm-up epoch=1 train_mae=0.722045 validation_mae=0.039797
+2026-09-22 15:53:02 | INFO | warm-up epoch=2 train_mae=0.589215 validation_mae=0.038767
+2026-09-22 15:54:23 | INFO | warm-up epoch=3 train_mae=0.544846 validation_mae=0.036390
+2026-09-22 15:55:44 | INFO | warm-up epoch=4 train_mae=0.525761 validation_mae=0.033473
+2026-09-22 15:57:06 | INFO | warm-up epoch=5 train_mae=0.516856 validation_mae=0.032856
+2026-09-22 15:58:27 | INFO | warm-up epoch=6 train_mae=0.511804 validation_mae=0.032488
+2026-09-22 15:59:48 | INFO | warm-up epoch=7 train_mae=0.509024 validation_mae=0.032483
+2026-09-22 16:01:09 | INFO | warm-up epoch=8 train_mae=0.507414 validation_mae=0.032425
+2026-09-22 16:02:30 | INFO | warm-up epoch=9 train_mae=0.507352 validation_mae=0.032432
+2026-09-22 16:03:52 | INFO | warm-up epoch=10 train_mae=0.506787 validation_mae=0.032324
+2026-09-22 16:05:13 | INFO | warm-up epoch=11 train_mae=0.506687 validation_mae=0.032366
+2026-09-22 16:06:34 | INFO | warm-up epoch=12 train_mae=0.506606 validation_mae=0.032346
+2026-09-22 16:07:55 | INFO | warm-up epoch=13 train_mae=0.506420 validation_mae=0.032312
+2026-09-22 16:09:16 | INFO | warm-up epoch=14 train_mae=0.506581 validation_mae=0.032393
+2026-09-22 16:10:37 | INFO | warm-up epoch=15 train_mae=0.506394 validation_mae=0.032341
+2026-09-22 16:11:58 | INFO | warm-up epoch=16 train_mae=0.506354 validation_mae=0.032429
+2026-09-22 16:13:19 | INFO | warm-up epoch=17 train_mae=0.506510 validation_mae=0.032398
+2026-09-22 16:14:40 | INFO | warm-up epoch=18 train_mae=0.505932 validation_mae=0.032310
+2026-09-22 16:16:01 | INFO | warm-up epoch=19 train_mae=0.506980 validation_mae=0.032397
+2026-09-22 16:17:22 | INFO | warm-up epoch=20 train_mae=0.506981 validation_mae=0.032318
+2026-09-22 16:18:43 | INFO | warm-up epoch=21 train_mae=0.507281 validation_mae=0.032440
+2026-09-22 16:20:04 | INFO | warm-up epoch=22 train_mae=0.506619 validation_mae=0.032441
+2026-09-22 16:21:25 | INFO | warm-up epoch=23 train_mae=0.506776 validation_mae=0.032402
+2026-09-22 16:22:46 | INFO | warm-up epoch=24 train_mae=0.506589 validation_mae=0.032448
+2026-09-22 16:24:07 | INFO | warm-up epoch=25 train_mae=0.506888 validation_mae=0.032411
+2026-09-22 16:25:28 | INFO | warm-up epoch=26 train_mae=0.505833 validation_mae=0.032241
+2026-09-22 16:26:49 | INFO | warm-up epoch=27 train_mae=0.506614 validation_mae=0.032359
+2026-09-22 16:28:10 | INFO | warm-up epoch=28 train_mae=0.506115 validation_mae=0.032415
+2026-09-22 16:29:31 | INFO | warm-up epoch=29 train_mae=0.506475 validation_mae=0.032287
+2026-09-22 16:30:52 | INFO | warm-up epoch=30 train_mae=0.506521 validation_mae=0.032375
+2026-09-22 16:32:13 | INFO | warm-up epoch=31 train_mae=0.505971 validation_mae=0.032393
+2026-09-22 16:33:34 | INFO | warm-up epoch=32 train_mae=0.505883 validation_mae=0.032432
+2026-09-22 16:34:55 | INFO | warm-up epoch=33 train_mae=0.506652 validation_mae=0.032354
+2026-09-22 16:36:16 | INFO | warm-up epoch=34 train_mae=0.506481 validation_mae=0.032360
+2026-09-22 16:37:37 | INFO | warm-up epoch=35 train_mae=0.506198 validation_mae=0.032430
+2026-09-22 16:38:58 | INFO | warm-up epoch=36 train_mae=0.506560 validation_mae=0.032407
+2026-09-22 16:38:58 | INFO | warm-up completed best_epoch=26 validation_mae=0.032241
+2026-09-22 16:38:58 | INFO | building fresh online model, optimizer, and SMB
+2026-09-22 16:39:09 | INFO | online setup lr=0.001 optimizer_states=0 replay_seen=0 validation_passes=1
+2026-09-22 16:39:09 | INFO | online evaluation started
+2026-09-22 16:39:34 | INFO | online processed=1000/105181 updates=673
+2026-09-22 16:39:59 | INFO | online processed=2000/105181 updates=1328
+2026-09-22 16:40:15 | INFO | online processed=3000/105181 updates=1656
+2026-09-22 16:40:32 | INFO | online processed=4000/105181 updates=2017
+2026-09-22 16:40:57 | INFO | online processed=5000/105181 updates=2689
+2026-09-22 16:41:22 | INFO | online processed=6000/105181 updates=3312
+2026-09-22 16:41:38 | INFO | online processed=7000/105181 updates=3640
+2026-09-22 16:41:56 | INFO | online processed=8000/105181 updates=4033
+2026-09-22 16:42:21 | INFO | online processed=9000/105181 updates=4705
+2026-09-22 16:42:44 | INFO | online processed=10000/105181 updates=5296
+2026-09-22 16:43:00 | INFO | online processed=11000/105181 updates=5624
+2026-09-22 16:43:19 | INFO | online processed=12000/105181 updates=6049
+2026-09-22 16:43:45 | INFO | online processed=13000/105181 updates=6721
+2026-09-22 16:44:07 | INFO | online processed=14000/105181 updates=7280
+2026-09-22 16:44:23 | INFO | online processed=15000/105181 updates=7608
+2026-09-22 16:44:43 | INFO | online processed=16000/105181 updates=8065
+2026-09-22 16:45:09 | INFO | online processed=17000/105181 updates=8737
+2026-09-22 16:45:30 | INFO | online processed=18000/105181 updates=9264
+2026-09-22 16:45:46 | INFO | online processed=19000/105181 updates=9592
+2026-09-22 16:46:07 | INFO | online processed=20000/105181 updates=10081
+2026-09-22 16:46:33 | INFO | online processed=21000/105181 updates=10753
+2026-09-22 16:46:53 | INFO | online processed=22000/105181 updates=11248
+2026-09-22 16:47:10 | INFO | online processed=23000/105181 updates=11576
+2026-09-22 16:47:31 | INFO | online processed=24000/105181 updates=12097
+2026-09-22 16:47:57 | INFO | online processed=25000/105181 updates=12769
+2026-09-22 16:48:16 | INFO | online processed=26000/105181 updates=13232
+2026-09-22 16:48:33 | INFO | online processed=27000/105181 updates=13560
+2026-09-22 16:48:55 | INFO | online processed=28000/105181 updates=14113
+2026-09-22 16:49:21 | INFO | online processed=29000/105181 updates=14785
+2026-09-22 16:49:40 | INFO | online processed=30000/105181 updates=15216
+2026-09-22 16:49:56 | INFO | online processed=31000/105181 updates=15544
+2026-09-22 16:50:20 | INFO | online processed=32000/105181 updates=16129
+2026-09-22 16:50:45 | INFO | online processed=33000/105181 updates=16801
+2026-09-22 16:51:04 | INFO | online processed=34000/105181 updates=17200
+2026-09-22 16:51:20 | INFO | online processed=35000/105181 updates=17528
+2026-09-22 16:51:44 | INFO | online processed=36000/105181 updates=18145
+2026-09-22 16:52:10 | INFO | online processed=37000/105181 updates=18817
+2026-09-22 16:52:27 | INFO | online processed=38000/105181 updates=19184
+2026-09-22 16:52:44 | INFO | online processed=39000/105181 updates=19512
+2026-09-22 16:53:09 | INFO | online processed=40000/105181 updates=20161
+2026-09-22 16:53:34 | INFO | online processed=41000/105181 updates=20833
+2026-09-22 16:53:51 | INFO | online processed=42000/105181 updates=21168
+2026-09-22 16:54:08 | INFO | online processed=43000/105181 updates=21505
+2026-09-22 16:54:33 | INFO | online processed=44000/105181 updates=22177
+2026-09-22 16:54:58 | INFO | online processed=45000/105181 updates=22824
+2026-09-22 16:55:15 | INFO | online processed=46000/105181 updates=23152
+2026-09-22 16:55:32 | INFO | online processed=47000/105181 updates=23521
+2026-09-22 16:55:58 | INFO | online processed=48000/105181 updates=24193
+2026-09-22 16:56:22 | INFO | online processed=49000/105181 updates=24808
+2026-09-22 16:56:39 | INFO | online processed=50000/105181 updates=25136
+2026-09-22 16:56:57 | INFO | online processed=51000/105181 updates=25537
+2026-09-22 16:57:23 | INFO | online processed=52000/105181 updates=26209
+2026-09-22 16:57:47 | INFO | online processed=53000/105181 updates=26792
+2026-09-22 16:58:03 | INFO | online processed=54000/105181 updates=27120
+2026-09-22 16:58:22 | INFO | online processed=55000/105181 updates=27553
+2026-09-22 16:58:48 | INFO | online processed=56000/105181 updates=28225
+2026-09-22 16:59:11 | INFO | online processed=57000/105181 updates=28776
+2026-09-22 16:59:27 | INFO | online processed=58000/105181 updates=29104
+2026-09-22 16:59:47 | INFO | online processed=59000/105181 updates=29569
+2026-09-22 17:00:13 | INFO | online processed=60000/105181 updates=30241
+2026-09-22 17:00:35 | INFO | online processed=61000/105181 updates=30760
+2026-09-22 17:00:51 | INFO | online processed=62000/105181 updates=31088
+2026-09-22 17:01:12 | INFO | online processed=63000/105181 updates=31585
+2026-09-22 17:01:38 | INFO | online processed=64000/105181 updates=32257
+2026-09-22 17:01:59 | INFO | online processed=65000/105181 updates=32744
+2026-09-22 17:02:16 | INFO | online processed=66000/105181 updates=33072
+2026-09-22 17:02:38 | INFO | online processed=67000/105181 updates=33601
+2026-09-22 17:03:03 | INFO | online processed=68000/105181 updates=34273
+2026-09-22 17:03:23 | INFO | online processed=69000/105181 updates=34728
+2026-09-22 17:03:40 | INFO | online processed=70000/105181 updates=35056
+2026-09-22 17:04:03 | INFO | online processed=71000/105181 updates=35617
+2026-09-22 17:04:29 | INFO | online processed=72000/105181 updates=36289
+2026-09-22 17:04:48 | INFO | online processed=73000/105181 updates=36712
+2026-09-22 17:05:04 | INFO | online processed=74000/105181 updates=37040
+2026-09-22 17:05:28 | INFO | online processed=75000/105181 updates=37633
+2026-09-22 17:05:54 | INFO | online processed=76000/105181 updates=38305
+2026-09-22 17:06:12 | INFO | online processed=77000/105181 updates=38696
+2026-09-22 17:06:29 | INFO | online processed=78000/105181 updates=39024
+2026-09-22 17:06:53 | INFO | online processed=79000/105181 updates=39649
+2026-09-22 17:07:19 | INFO | online processed=80000/105181 updates=40321
+2026-09-22 17:07:37 | INFO | online processed=81000/105181 updates=40680
+2026-09-22 17:07:53 | INFO | online processed=82000/105181 updates=41008
+2026-09-22 17:08:19 | INFO | online processed=83000/105181 updates=41665
+2026-09-22 17:08:45 | INFO | online processed=84000/105181 updates=42336
+2026-09-22 17:09:01 | INFO | online processed=85000/105181 updates=42664
+2026-09-22 17:09:18 | INFO | online processed=86000/105181 updates=43009
+2026-09-22 17:09:44 | INFO | online processed=87000/105181 updates=43681
+2026-09-22 17:10:09 | INFO | online processed=88000/105181 updates=44320
+2026-09-22 17:10:26 | INFO | online processed=89000/105181 updates=44648
+2026-09-22 17:10:43 | INFO | online processed=90000/105181 updates=45025
+2026-09-22 17:11:09 | INFO | online processed=91000/105181 updates=45697
+2026-09-22 17:11:34 | INFO | online processed=92000/105181 updates=46304
+2026-09-22 17:11:50 | INFO | online processed=93000/105181 updates=46632
+2026-09-22 17:12:09 | INFO | online processed=94000/105181 updates=47041
+2026-09-22 17:12:35 | INFO | online processed=95000/105181 updates=47713
+2026-09-22 17:12:58 | INFO | online processed=96000/105181 updates=48288
+2026-09-22 17:13:15 | INFO | online processed=97000/105181 updates=48616
+2026-09-22 17:13:34 | INFO | online processed=98000/105181 updates=49057
+2026-09-22 17:14:00 | INFO | online processed=99000/105181 updates=49729
+2026-09-22 17:14:23 | INFO | online processed=100000/105181 updates=50272
+2026-09-22 17:14:39 | INFO | online processed=101000/105181 updates=50600
+2026-09-22 17:15:00 | INFO | online processed=102000/105181 updates=51073
+2026-09-22 17:15:26 | INFO | online processed=103000/105181 updates=51745
+2026-09-22 17:15:48 | INFO | online processed=104000/105181 updates=52256
+2026-09-22 17:16:04 | INFO | online processed=105000/105181 updates=52584
+2026-09-22 17:16:10 | INFO | online processed=105181/105181 updates=52765
+2026-09-22 17:16:11 | INFO | online completed mae=0.699343 rmse=2.225922 sample_rmse=1.995416 wmape=0.359263 updates=52765/105181
+2026-09-22 17:16:11 | INFO | metrics=experiments/exp01/seeds/seed44/metrics.json
