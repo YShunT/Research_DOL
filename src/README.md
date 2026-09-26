@@ -1,13 +1,13 @@
 # DOLを読みやすく再実装する
 
-このディレクトリは、DOL（Distribution-Aware Online Learning）を、論文の構成とコードの責務が対応するように再実装した学習用コードである。
+このディレクトリは、DOL（Distribution-Aware Online Learning）の再実装と、exp02の低ランクLSL比較を含む研究コードである。以下の基本パイプラインと公開実装との照合はexp00/exp01の独立LSLについて説明する。
 
 - `raw/DOL_original`を参照専用の互換基準とし、この再実装からはimportしない。
 - 公開実装の既定値、初期化順、学習、SMB、online更新の挙動を保つ。
 - データ、モデル、warm-up、online、評価を責務ごとのmoduleへ分け、読みやすくする。
-- CLIの`argparse`は使わず、dataclassの設定をPythonから明示的に渡す。
+- 基本設定はdataclassで管理し、exp02のrank/seed選択など実行管理だけCLI引数を使う。
 - module内部で`.cuda()`を呼ばない。モデル、入力、グラフ支持行列を実行側で同じdeviceへ置く。
-- importしただけでは学習を開始しない。[`run_dol.py`](run_dol.py)または[`run_exp01.py`](run_exp01.py)を直接実行した場合だけ実験を開始する。
+- importしただけでは学習を開始しない。[`run_dol.py`](run_dol.py)、[`run_exp01.py`](run_exp01.py)、[`run_exp02.py`](run_exp02.py)を直接実行した場合だけ実験を開始する。
 
 数式、Tensor形状、各クラスの役割、公開実装との差も本READMEにまとめる。
 
@@ -52,9 +52,11 @@ src/
 ├── README.md
 ├── run_dol.py
 ├── run_exp01.py
+├── run_exp02.py
 └── dol/
     ├── artifacts.py
     ├── multiseed.py
+    ├── exp02.py
     ├── config.py
     ├── pipeline.py
     ├── data/
@@ -65,6 +67,7 @@ src/
     │   └── supports.py
     ├── layers/
     │   ├── LSL.py
+    │   ├── napl.py
     │   ├── graph_convolution.py
     │   └── graph.py
     ├── models/
@@ -78,7 +81,10 @@ src/
     │   ├── schedule.py
     │   └── adapter.py
     └── evaluation/
-        └── metrics.py
+        ├── metrics.py
+        ├── exp02.py
+        ├── exp02_distill.py
+        └── exp02_plots.py
 ```
 
 ## 3 各Pythonファイルの役割
@@ -92,14 +98,22 @@ DOL実験の入口である。全体の流れは次のようになる。
 ```python
 from run_dol import main
 
-main(experiment_name="exp02")  # warm-up後、online用にmodel/optimizer/SMBを新規構築
+main(experiment_name="exp03")  # 単発の独立LSL実験。exp02には使わない
 ```
 
-引数なしなら次の`exp<ii>`を割り当て、`exp02`のような引数があれば未実行の同名ディレクトリを使う。`--reuse-checkpoint`付きなら完了済み番号のwarm-up checkpointを残し、旧ログ・指標を`attempts/`へ退避してonlineだけ再実行する。`if __name__ == "__main__":`の内側でだけ`main()`を呼ぶため、他のコードからimportしても実験は始まらない。
+引数なしなら次の`exp<ii>`を割り当て、番号を指定すれば未実行の同名ディレクトリを使う。`--reuse-checkpoint`付きなら完了済み番号のwarm-up checkpointを残し、旧ログ・指標を`attempts/`へ退避してonlineだけ再実行する。`if __name__ == "__main__":`の内側でだけ`main()`を呼ぶため、他のコードからimportしても実験は始まらない。
 
 #### [`run_exp01.py`](run_exp01.py)
 
 Chicago-Tのseed 42〜46を独立に実行する入口。`--retry-failed`を付けた場合だけ失敗・中断した試行を退避して再実行する。単発用の`run_dol.py exp01`では5 seedにならない。
+
+#### [`run_exp02.py`](run_exp02.py)
+
+低ランクLSLの全rank×5 seed・3条件の実験入口。`--run`で未完了試行を順次実行し、完了済みcheckpointと結果は検証して再利用する。`--seed`・`--rank`は一部を先に検証するときに使う。`--retry-failed`は失敗・中断した成果物を`attempts/`へ退避し、`--plot`は保存済み指標からPNGを生成する。`--distill`はexp01のLSL補正を固定バックボーンで近似する。実行条件とコマンドは[exp02の計画](../experiments/exp02/strategy.md)に記す。
+
+#### [`dol/exp02.py`](dol/exp02.py)
+
+9 rank×5 seedの共通重みありwarm-up、8 rank×5 seedの共通重みなしwarm-up、LSLなし対照を管理する。共通重みありでは同一checkpointからE-onlyとfrozenへ分岐する。コードrevision・入力ハッシュを固定し、rank×条件×seedの4指標を集計する。
 
 #### [`dol/multiseed.py`](dol/multiseed.py)
 
@@ -213,6 +227,10 @@ x = embedded + location_specific(embedded)
 
 はモデル側で行う。Chicago-Tでは1地点292、77地点で22,484パラメータである。
 
+#### [`dol/layers/napl.py`](dol/layers/napl.py)
+
+exp02では`Θ=1θ_sharedᵀ+EB`（共通重みあり）または`Θ=EB`（共通重みなし）から地点別292次元の重みを生成し、元と同じ`32→4→32`の補正を行う。オンラインでEのみ更新する条件、EとBを更新する条件、LSLなし対照を用意する。`r=0`で共通重みなしはLSLなしと同じ扱いにする。
+
 ### 3.5 DOL予測モデル
 
 #### [`dol/models/dol.py`](dol/models/dol.py)
@@ -235,7 +253,7 @@ residual
 4. `blocks`：dilation 1,2を4回繰り返す8層。
 5. `output_projection`：skip 256→512→12ホライズン。
 
-`freeze_for_online_adaptation()`は全パラメータを凍結した後、LSLだけ`requires_grad=True`にする。さらに`eval()`へ置くため、オンライン更新中もBatchNormの統計とDropoutが固定される。
+`freeze_for_online_adaptation()`はexp00/01では全パラメータを凍結した後、LSLだけ`requires_grad=True`にする。exp02ではE-only・EB-update・frozenを切り替える。さらに`eval()`へ置くため、オンライン更新中もBatchNormの統計とDropoutが固定される。
 
 Chicago-T既定設定で確認した値は次のとおりである。
 
@@ -316,6 +334,12 @@ online開始前: 新しいSMBへvalidationを1回だけ投入
 
 需要が0の地点を含むため、単純なMAPEではなく分母を全真値の絶対値和とするWMAPEを使う。
 
+#### exp02用の評価ファイル
+
+- [`dol/evaluation/exp02.py`](dol/evaluation/exp02.py)：全予測配列を保存せず、週・地点・ホライズン別の誤差と、地点係数・基底・LSL補正の週次変化を記録する。
+- [`dol/evaluation/exp02_plots.py`](dol/evaluation/exp02_plots.py)：rank対4指標、E-only対frozenの適応利得、パラメータ数・実測時間、LSL変化を`experiments/exp02/figures/`へPNGで出力する。
+- [`dol/evaluation/exp02_distill.py`](dol/evaluation/exp02_distill.py)：exp01のLSL補正を教師にし、固定バックボーンのままrank別NAPL-LSLを学習・評価する補助診断。
+
 ## 4 実行方法
 
 ### 4.1 環境
@@ -329,7 +353,7 @@ online開始前: 新しいSMBへvalidationを1回だけ投入
 |`.python-version`|rawの検証環境に合わせてPython 3.11を指定|
 |`.venv/`|uvが同期するローカル仮想環境|
 
-実行時依存は、公開実装に合わせたPyTorch 2.1.1、NumPy 1.xと、Chicago-TのNPZ内のTimestamp復元に必要なpandas 2.xだけを宣言している。
+実行時依存はPyTorch 2.1.1、NumPy 1.x、Chicago-TのTimestamp復元に必要なpandas 2.x、およびexp02のPNG図生成用Matplotlibである。
 
 最初の構築または依存更新後は、研究ディレクトリで同期する。
 
@@ -370,10 +394,10 @@ config = ExperimentConfig(runtime=RuntimeConfig(device="cpu"))
 uv run python src/run_dol.py
 ```
 
-未実行の番号（例：`exp02`）へ単発の結果を保存する場合は次のように指定する。実行済みの`exp00`は通常の実行では上書きできない。`exp01`は5 seed再現計画用に予約している。
+未実行の番号へ独立LSLの単発結果を保存する場合は次のように指定する。実行済みの`exp00`は通常の実行では上書きできない。`exp01`と`exp02`は専用ランナーを使い、この単発入口では実行しない。
 
 ```bash
-uv run python src/run_dol.py exp02
+uv run python src/run_dol.py exp03
 ```
 
 実行済みディレクトリは通常上書きしない。既存checkpointから同じ番号のonlineだけをやり直す場合は、次を実行する。旧ログ・指標・設定は`attempts/`へ退避され、checkpointは保持される。
@@ -438,7 +462,7 @@ from run_dol import main
 config = ExperimentConfig(
     artifacts=ArtifactConfig(save_predictions=True),
 )
-main(experiment_name="exp02", config=config)
+main(experiment_name="exp03", config=config)
 ```
 
 Chicago-T既定条件では予測と正解を合わせて大きな容量になるため、`save_predictions=False`が既定値である。
@@ -549,7 +573,7 @@ Hibernateは学習更新を止める状態であり、推論停止ではない�
 - SMBと遅延教師は公開実装と同じくGPUに常駐する。SMBは固定容量Tensorで保持し、EM抽出はGPU上で行う。
 - 評価指標は公開実装と同じく予測・正解をCPUで連結し、NumPyで一括集計する。
 - 現在のデータローダーはChicago-Tだけであり、Singapore-T、METR-LA、PEMS-BAYには未対応である。
-- exp01用のChicago-T 5 seed集約は実装済みだが、GPU実験は未実行である。t検定、13ベースライン、各アブレーション、推論時間計測は未実装である。
+- exp01用のChicago-T 5 seed集約とGPU実験は完了している。t検定、13ベースライン、論文の全アブレーションは未実装である。exp02はコード実装済みだがGPU本実験は未実行である。
 
 したがって、**Chicago-Tの公開実装を読みやすく再構成し、主要な実行ロジックと固定入力のforward出力を合わせた実装である**。論文Table 2--4全体の再現には、他データセットと比較手法の実装・実行も必要になる。
 
@@ -557,7 +581,7 @@ Hibernateは学習更新を止める状態であり、推論停止ではない�
 
 - `OnlineConfig.learning_rate`と`weight_decay`は記録用で、現行CLIのオンラインoptimizerには反映されない。新しいoptimizerも`WarmupConfig`の値を使う。`OnlineConfig.batch_size`もDataLoaderへは渡さず、raw互換の1に固定している。既定設定では学習率とweight decayが両設定で一致する。
 - 対応ローダーはChicago-Tである。METR-LA、PEMS-BAY、Singapore-Tは、同じ`TimeWindowDataset`へ`(T,N)` Tensorを渡すローダーを追加すれば使える。
-- exp01では複数seedの自動集約を実装したが、図の自動生成は実行パイプラインへ含めていない。
+- exp01では複数seedの自動集約を実装したが、図の自動生成は実行パイプラインへ含めていない。exp02では専用ランナーとPNG作図を用意した。
 - グラフ伝播方向と層構成は合っているが、module名が異なるため公開checkpointをそのまま`load_state_dict`で読み込めない。
 - 論文の統計的有意差検定は、複数seedの実験結果が必要であり、この実装ファイルだけでは実行しない。
 - `raw/`は参照専用としてimportせず、互換性は固定入力と実験指標で検証する。

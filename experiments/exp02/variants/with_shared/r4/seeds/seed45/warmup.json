@@ -1,0 +1,162 @@
+{
+  "status": "completed",
+  "identity": {
+    "structure": "with_shared",
+    "rank": 4,
+    "seed": 45,
+    "config": {
+      "data": {
+        "data_path": "datasets/chicago-t/chicago20_23.npz",
+        "adjacency_path": "datasets/chicago-t/adj_chicago.npy",
+        "num_nodes": 77,
+        "input_length": 12,
+        "forecast_horizon": 12,
+        "interval_minutes": 15,
+        "steps_per_week": 672,
+        "train_ratio": 0.2,
+        "validation_ratio": 0.05,
+        "online_ratio": 0.75
+      },
+      "model": {
+        "residual_channels": 32,
+        "dilation_channels": 32,
+        "skip_channels": 256,
+        "end_channels": 512,
+        "lsl_bottleneck_channels": 4,
+        "lsl_dropout": 0.5,
+        "graph_dropout": 0.3,
+        "adaptive_graph_rank": 10,
+        "diffusion_order": 2,
+        "fixed_support_count": 2,
+        "use_adaptive_graph": true,
+        "blocks": 4,
+        "layers_per_block": 2,
+        "temporal_kernel_size": 2
+      },
+      "warmup": {
+        "seed": 45,
+        "batch_size": 32,
+        "max_epochs": 150,
+        "patience": 10,
+        "learning_rate": 0.001,
+        "learning_rate_decay": 0.5,
+        "weight_decay": 0.01
+      },
+      "online": {
+        "batch_size": 1,
+        "learning_rate": 0.001,
+        "weight_decay": 0.01,
+        "awake_weeks": 1,
+        "hibernate_weeks": 1,
+        "buffer_capacity": 1000,
+        "replay_size": 8,
+        "update_steps": 1
+      },
+      "runtime": {
+        "device": "cuda:0",
+        "deterministic": true
+      },
+      "artifacts": {
+        "experiments_root": "experiments",
+        "save_predictions": false
+      }
+    }
+  },
+  "best_epoch": 8,
+  "best_validation_mae": 0.0323967126572343,
+  "history": [
+    {
+      "epoch": 1,
+      "train_mae": 0.7286140293053218,
+      "validation_mae": 0.034790180402395385
+    },
+    {
+      "epoch": 2,
+      "train_mae": 0.6061957508836474,
+      "validation_mae": 0.03608893973914456
+    },
+    {
+      "epoch": 3,
+      "train_mae": 0.556165231023516,
+      "validation_mae": 0.03478093633691878
+    },
+    {
+      "epoch": 4,
+      "train_mae": 0.5371780503477369,
+      "validation_mae": 0.03288053220231511
+    },
+    {
+      "epoch": 5,
+      "train_mae": 0.5285193121092661,
+      "validation_mae": 0.03306267296121409
+    },
+    {
+      "epoch": 6,
+      "train_mae": 0.5232030473436629,
+      "validation_mae": 0.03283463412317443
+    },
+    {
+      "epoch": 7,
+      "train_mae": 0.5204852829660688,
+      "validation_mae": 0.033019362532078676
+    },
+    {
+      "epoch": 8,
+      "train_mae": 0.5187973623616354,
+      "validation_mae": 0.0323967126572343
+    },
+    {
+      "epoch": 9,
+      "train_mae": 0.5182380340099335,
+      "validation_mae": 0.03251622762046244
+    },
+    {
+      "epoch": 10,
+      "train_mae": 0.518354989017759,
+      "validation_mae": 0.032658854692953224
+    },
+    {
+      "epoch": 11,
+      "train_mae": 0.5178644349915641,
+      "validation_mae": 0.032675900702794254
+    },
+    {
+      "epoch": 12,
+      "train_mae": 0.5181173624651773,
+      "validation_mae": 0.032495577925960764
+    },
+    {
+      "epoch": 13,
+      "train_mae": 0.5176508130005428,
+      "validation_mae": 0.03262108274773784
+    },
+    {
+      "epoch": 14,
+      "train_mae": 0.517557375737599,
+      "validation_mae": 0.03259203867714631
+    },
+    {
+      "epoch": 15,
+      "train_mae": 0.5180306611401694,
+      "validation_mae": 0.03266644996875837
+    },
+    {
+      "epoch": 16,
+      "train_mae": 0.5178006954874311,
+      "validation_mae": 0.03255119069254017
+    },
+    {
+      "epoch": 17,
+      "train_mae": 0.517178200687681,
+      "validation_mae": 0.03256882995060862
+    },
+    {
+      "epoch": 18,
+      "train_mae": 0.517876810823168,
+      "validation_mae": 0.03263679026842934
+    }
+  ],
+  "initial_weight_norm": 34.15470504760742,
+  "trained_weight_norm": 33.42509841918945,
+  "checkpoint_sha256": "a943e59b06888843bfd008d302b3b097faba02d0540d2abd9318e22a929df04c"
+}

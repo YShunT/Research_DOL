@@ -9,6 +9,7 @@ from pathlib import Path
 
 import torch
 from torch import Tensor
+from torch import nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 
@@ -17,7 +18,7 @@ from .data.chicago import ChicagoDataBundle, prepare_chicago_data
 from .evaluation.metrics import ForecastMetrics, compute_forecast_metrics
 from .graph.supports import build_double_transition_supports, load_adjacency
 from .models.dol import DOLForecastModel
-from .online.adapter import OnlineAdapter
+from .online.adapter import OnlineAdapter, OnlineStepResult
 from .online.replay import ReservoirReplayBuffer
 from .training.warmup import (
     EpochRecord,
@@ -48,11 +49,16 @@ class OnlineEvaluation:
     validation_samples_seen: int
     initial_replay_size: int
     elapsed_seconds: float
+    update_seconds: float = 0.0
+    inference_seconds: float = 0.0
     predictions: Tensor | None = None
     targets: Tensor | None = None
 
 
-def build_components(config: ExperimentConfig) -> DOLComponents:
+def build_components(
+    config: ExperimentConfig,
+    location_learner_factory: Callable[[], nn.Module] | None = None,
+) -> DOLComponents:
     """ファイル読込を含め、実験に必要な静的部品を構築する。"""
 
     device = _resolve_device(config.runtime.device)
@@ -73,7 +79,10 @@ def build_components(config: ExperimentConfig) -> DOLComponents:
         support.to(device=device, dtype=torch.float32)
         for support in fixed_supports
     ]
-    model = DOLForecastModel(config.data, config.model).to(device)
+    location_learner = location_learner_factory() if location_learner_factory else None
+    model = DOLForecastModel(
+        config.data, config.model, location_learner=location_learner
+    ).to(device)
     optimizer = AdamW(
         model.parameters(),
         lr=config.warmup.learning_rate,
@@ -163,6 +172,8 @@ def run_online_evaluation(
     progress_interval: int | None = None,
     progress_callback: Callable[[int, int, int], None] | None = None,
     seed_validation_before_online: bool = False,
+    update_mode: str = "all",
+    step_callback: Callable[[OnlineStepResult], None] | None = None,
 ) -> OnlineEvaluation:
     """online区間を時系列順に予測・適応し、指標を集計する。
 
@@ -182,6 +193,7 @@ def run_online_evaluation(
         config=components.config,
         optimizer=components.optimizer,
         replay=components.replay,
+        update_mode=update_mode,
     )
 
     # rawのtest()はmode=onlineのときだけvali()を追加で呼ぶ。
@@ -195,18 +207,24 @@ def run_online_evaluation(
     updates = 0
     awake_steps = 0
     hibernate_steps = 0
+    update_seconds = 0.0
+    inference_seconds = 0.0
     predictions: list[Tensor] = []
     targets: list[Tensor] = []
     total_steps = min(len(online_loader), max_steps or len(online_loader))
     started_at = time.perf_counter()
     for inputs, target in online_loader:
         result = adapter.process(inputs, target)
+        if step_callback is not None:
+            step_callback(result)
         predictions.append(result.prediction)
         targets.append(result.target)
         processed += 1
         updates += int(result.update_mae is not None)
         awake_steps += int(result.phase == "awake")
         hibernate_steps += int(result.phase == "hibernate")
+        update_seconds += result.update_seconds
+        inference_seconds += result.inference_seconds
         if (
             progress_callback is not None
             and progress_interval is not None
@@ -232,6 +250,8 @@ def run_online_evaluation(
         validation_samples_seen=validation_samples_seen,
         initial_replay_size=initial_replay_size,
         elapsed_seconds=elapsed_seconds,
+        update_seconds=update_seconds,
+        inference_seconds=inference_seconds,
         predictions=prediction_tensor if collect_predictions else None,
         targets=target_tensor if collect_predictions else None,
     )

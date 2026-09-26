@@ -1,0 +1,182 @@
+{
+  "status": "completed",
+  "identity": {
+    "structure": "with_shared",
+    "rank": 1,
+    "seed": 43,
+    "config": {
+      "data": {
+        "data_path": "datasets/chicago-t/chicago20_23.npz",
+        "adjacency_path": "datasets/chicago-t/adj_chicago.npy",
+        "num_nodes": 77,
+        "input_length": 12,
+        "forecast_horizon": 12,
+        "interval_minutes": 15,
+        "steps_per_week": 672,
+        "train_ratio": 0.2,
+        "validation_ratio": 0.05,
+        "online_ratio": 0.75
+      },
+      "model": {
+        "residual_channels": 32,
+        "dilation_channels": 32,
+        "skip_channels": 256,
+        "end_channels": 512,
+        "lsl_bottleneck_channels": 4,
+        "lsl_dropout": 0.5,
+        "graph_dropout": 0.3,
+        "adaptive_graph_rank": 10,
+        "diffusion_order": 2,
+        "fixed_support_count": 2,
+        "use_adaptive_graph": true,
+        "blocks": 4,
+        "layers_per_block": 2,
+        "temporal_kernel_size": 2
+      },
+      "warmup": {
+        "seed": 43,
+        "batch_size": 32,
+        "max_epochs": 150,
+        "patience": 10,
+        "learning_rate": 0.001,
+        "learning_rate_decay": 0.5,
+        "weight_decay": 0.01
+      },
+      "online": {
+        "batch_size": 1,
+        "learning_rate": 0.001,
+        "weight_decay": 0.01,
+        "awake_weeks": 1,
+        "hibernate_weeks": 1,
+        "buffer_capacity": 1000,
+        "replay_size": 8,
+        "update_steps": 1
+      },
+      "runtime": {
+        "device": "cuda:0",
+        "deterministic": true
+      },
+      "artifacts": {
+        "experiments_root": "experiments",
+        "save_predictions": false
+      }
+    }
+  },
+  "best_epoch": 12,
+  "best_validation_mae": 0.032490732849971074,
+  "history": [
+    {
+      "epoch": 1,
+      "train_mae": 0.7293427749020712,
+      "validation_mae": 0.0408816144771908
+    },
+    {
+      "epoch": 2,
+      "train_mae": 0.6040645806108202,
+      "validation_mae": 0.034985924866815954
+    },
+    {
+      "epoch": 3,
+      "train_mae": 0.5577665728500911,
+      "validation_mae": 0.03381311356357924
+    },
+    {
+      "epoch": 4,
+      "train_mae": 0.5350672143868037,
+      "validation_mae": 0.03330001121250802
+    },
+    {
+      "epoch": 5,
+      "train_mae": 0.5262052664075579,
+      "validation_mae": 0.033534533884291236
+    },
+    {
+      "epoch": 6,
+      "train_mae": 0.5205170011520386,
+      "validation_mae": 0.03303704813939251
+    },
+    {
+      "epoch": 7,
+      "train_mae": 0.5172946143831526,
+      "validation_mae": 0.032775930435179845
+    },
+    {
+      "epoch": 8,
+      "train_mae": 0.5162281450884683,
+      "validation_mae": 0.03277276529926279
+    },
+    {
+      "epoch": 9,
+      "train_mae": 0.5153388080596923,
+      "validation_mae": 0.03266097026447591
+    },
+    {
+      "epoch": 10,
+      "train_mae": 0.515564090013504,
+      "validation_mae": 0.03254313530723594
+    },
+    {
+      "epoch": 11,
+      "train_mae": 0.5152310813835689,
+      "validation_mae": 0.03259289670378378
+    },
+    {
+      "epoch": 12,
+      "train_mae": 0.5148671642371586,
+      "validation_mae": 0.032490732849971074
+    },
+    {
+      "epoch": 13,
+      "train_mae": 0.5153191435677664,
+      "validation_mae": 0.032707680654648234
+    },
+    {
+      "epoch": 14,
+      "train_mae": 0.5152029012952533,
+      "validation_mae": 0.03267894052479365
+    },
+    {
+      "epoch": 15,
+      "train_mae": 0.5154097416741508,
+      "validation_mae": 0.032785889422563524
+    },
+    {
+      "epoch": 16,
+      "train_mae": 0.5152609840120588,
+      "validation_mae": 0.03274334962245876
+    },
+    {
+      "epoch": 17,
+      "train_mae": 0.5144918155670166,
+      "validation_mae": 0.03287605945122977
+    },
+    {
+      "epoch": 18,
+      "train_mae": 0.5154536233970097,
+      "validation_mae": 0.032805182985944425
+    },
+    {
+      "epoch": 19,
+      "train_mae": 0.5153335178920201,
+      "validation_mae": 0.03290304727427083
+    },
+    {
+      "epoch": 20,
+      "train_mae": 0.5144144075938634,
+      "validation_mae": 0.032666805887076
+    },
+    {
+      "epoch": 21,
+      "train_mae": 0.5146674308776855,
+      "validation_mae": 0.03275042604102187
+    },
+    {
+      "epoch": 22,
+      "train_mae": 0.5152932300567626,
+      "validation_mae": 0.03263481885628545
+    }
+  ],
+  "initial_weight_norm": 34.624481201171875,
+  "trained_weight_norm": 33.21009826660156,
+  "checkpoint_sha256": "8f0db1b5ca0c21e21041ee2ab37ecf8f8025f384dd0f0a7768fdc8c10446a402"
+}

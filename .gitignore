@@ -10,6 +10,7 @@ __pycache__/
 /tmp/
 /visualizations/
 /experiments/**/checkpoints/
+/experiments/**/arrays/
 /experiments/_template/
 /src/tests/
 /experiments/**/attempts/

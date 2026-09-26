@@ -5,6 +5,12 @@ Streaming Data）の公開実装を、実行ロジックを保ちながら読み
 
 このリポジトリの `src/` は[著者公開の DOL 実装](https://github.com/cwang-nus/DOL)を参考に再構成したものです。元実装のライセンス表示は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) に保存しています。`raw/` と処理済みデータ、学習済み checkpoint は GitHub には含めません。
 
+## 実験の実行記録
+
+|実行日（JST）|実験番号|実験内容|
+|---|---|---|
+|2026-09-21|[exp00](experiments/exp00/report.md)|Chicago-Tでseed 42の論文再現実験。warm-up checkpointを使ったonline評価を実施。|
+|2026-09-22|[exp01](experiments/exp01/report.md)|Chicago-Tでseed 42〜46の5試行を、それぞれwarm-upから実行し、論文値と平均・標準偏差を比較。|
 
 ## 最新の構成
 
