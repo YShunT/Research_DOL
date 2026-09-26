@@ -62,6 +62,17 @@ def _save(fig: Any, root: Path, name: str) -> None:
     plt.close(fig)
 
 
+def _unique_legend(axes: Any) -> tuple[list[Any], list[str]]:
+    """複数panelから重複しない凡例要素を集める。"""
+
+    unique: dict[str, Any] = {}
+    for axis in np.asarray(axes).flat:
+        handles, labels = axis.get_legend_handles_labels()
+        for handle, label in zip(handles, labels):
+            unique.setdefault(label, handle)
+    return list(unique.values()), list(unique)
+
+
 def plot_rank_metrics(root: Path, groups: list[dict[str, Any]]) -> None:
     fig, axes = plt.subplots(2, 2, figsize=(13, 9), sharex=True)
     baseline = _baseline()
@@ -101,8 +112,13 @@ def plot_rank_metrics(root: Path, groups: list[dict[str, Any]]) -> None:
         axis.set_xticks(range(len(RANKS)), [str(rank) for rank in RANKS])
     for axis in axes[-1]:
         axis.set_xlabel("Basis rank r (discrete candidates)")
-    axes[0, 0].legend(fontsize=8)
-    fig.suptitle("exp02: online metrics by basis rank")
+    handles, labels = _unique_legend(axes)
+    fig.suptitle("exp02: online metrics by basis rank", y=0.99)
+    fig.legend(
+        handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.955),
+        ncol=len(labels), fontsize=8, frameon=False,
+    )
+    fig.subplots_adjust(top=0.87)
     _save(fig, root, "rank_vs_metrics.png")
 
 
@@ -259,6 +275,94 @@ def plot_cost(root: Path, groups: list[dict[str, Any]]) -> None:
     _save(fig, root, "rank_vs_cost.png")
 
 
+def plot_parameter_count(root: Path, groups: list[dict[str, Any]]) -> None:
+    """rankごとの保持数とonline更新数を、他のコストから分離して示す。"""
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5), sharex=True, sharey=True)
+    retained_series = (
+        ("with_shared", "shared offset + EB", COLORS[("with_shared", "e_only")]),
+        ("no_shared", "no shared offset + EB", COLORS[("no_shared", "eb_update")]),
+    )
+    for structure, label, color in retained_series:
+        by_rank: dict[int, float] = {}
+        for group in groups:
+            if group["structure"] != structure or not group["runs"]:
+                continue
+            if structure == "with_shared" and not (
+                group["branch"] == "e_only"
+                or (group["rank"] == 0 and group["branch"] == "frozen")
+            ):
+                continue
+            sample = next(iter(group["runs"].values()))
+            by_rank[group["rank"]] = float(sample["lsl_retained_parameters"])
+        points = [
+            (RANKS.index(rank), by_rank[rank])
+            for rank in RANKS if rank in by_rank
+        ]
+        if points:
+            axes[0].plot(
+                [point[0] for point in points],
+                [point[1] for point in points],
+                marker="o", color=color, label=label,
+            )
+    no_lsl = next(
+        (group for group in groups if group["structure"] == "no_lsl" and group["runs"]),
+        None,
+    )
+    if no_lsl:
+        axes[0].scatter(
+            [RANKS.index(0)], [0], marker="x", s=80,
+            color=COLORS[("no_lsl", "frozen")], label="no LSL",
+        )
+
+    for condition in (
+        ("with_shared", "e_only"),
+        ("with_shared", "frozen"),
+        ("no_shared", "eb_update"),
+    ):
+        points = []
+        for group in groups:
+            if (group["structure"], group["branch"]) != condition:
+                continue
+            if not group["runs"]:
+                continue
+            sample = next(iter(group["runs"].values()))
+            points.append(
+                (RANKS.index(group["rank"]), float(sample["lsl_online_parameters"]))
+            )
+        if points:
+            axes[1].plot(
+                [point[0] for point in points],
+                [point[1] for point in points],
+                marker="o",
+                color=COLORS[condition],
+                label=LABELS[condition],
+            )
+
+    for axis, title in zip(
+        axes,
+        ("Retained LSL parameters", "Online-updated LSL parameters"),
+    ):
+        axis.axhline(
+            22_484, color="black", linestyle="--", linewidth=1,
+            label="exp01 independent LSL (22,484)",
+        )
+        axis.set_title(title)
+        axis.set_xlabel("Basis rank r (discrete candidates)")
+        axis.set_xticks(range(len(RANKS)), [str(rank) for rank in RANKS])
+        axis.yaxis.set_major_formatter(lambda value, _: f"{value:,.0f}")
+        axis.grid(alpha=0.2)
+    axes[0].set_ylabel("Number of parameters")
+    handles, labels = _unique_legend(axes)
+    fig.suptitle("exp02: LSL parameter counts by basis rank", y=0.99)
+    fig.legend(
+        handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.91),
+        ncol=3, fontsize=8, frameon=False,
+    )
+    fig.subplots_adjust(top=0.77)
+    _save(fig, root, "rank_vs_parameter_count.png")
+
+
 def plot_accuracy_cost(root: Path, groups: list[dict[str, Any]]) -> None:
     baseline = _baseline()
     if "mae" not in baseline or "rmse" not in baseline:
@@ -407,6 +511,7 @@ def plot_all(root: Path = Path("experiments/exp02")) -> None:
     plot_rank_metrics(root, groups)
     plot_adaptation_gain(root, groups)
     plot_cost(root, groups)
+    plot_parameter_count(root, groups)
     plot_accuracy_cost(root, groups)
     plot_coefficient_change(root)
     plot_lsl_change(root, groups)

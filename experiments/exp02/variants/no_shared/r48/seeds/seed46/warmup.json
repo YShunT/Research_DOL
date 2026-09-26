@@ -1,0 +1,162 @@
+{
+  "status": "completed",
+  "identity": {
+    "structure": "no_shared",
+    "rank": 48,
+    "seed": 46,
+    "config": {
+      "data": {
+        "data_path": "datasets/chicago-t/chicago20_23.npz",
+        "adjacency_path": "datasets/chicago-t/adj_chicago.npy",
+        "num_nodes": 77,
+        "input_length": 12,
+        "forecast_horizon": 12,
+        "interval_minutes": 15,
+        "steps_per_week": 672,
+        "train_ratio": 0.2,
+        "validation_ratio": 0.05,
+        "online_ratio": 0.75
+      },
+      "model": {
+        "residual_channels": 32,
+        "dilation_channels": 32,
+        "skip_channels": 256,
+        "end_channels": 512,
+        "lsl_bottleneck_channels": 4,
+        "lsl_dropout": 0.5,
+        "graph_dropout": 0.3,
+        "adaptive_graph_rank": 10,
+        "diffusion_order": 2,
+        "fixed_support_count": 2,
+        "use_adaptive_graph": true,
+        "blocks": 4,
+        "layers_per_block": 2,
+        "temporal_kernel_size": 2
+      },
+      "warmup": {
+        "seed": 46,
+        "batch_size": 32,
+        "max_epochs": 150,
+        "patience": 10,
+        "learning_rate": 0.001,
+        "learning_rate_decay": 0.5,
+        "weight_decay": 0.01
+      },
+      "online": {
+        "batch_size": 1,
+        "learning_rate": 0.001,
+        "weight_decay": 0.01,
+        "awake_weeks": 1,
+        "hibernate_weeks": 1,
+        "buffer_capacity": 1000,
+        "replay_size": 8,
+        "update_steps": 1
+      },
+      "runtime": {
+        "device": "cuda:0",
+        "deterministic": true
+      },
+      "artifacts": {
+        "experiments_root": "experiments",
+        "save_predictions": false
+      }
+    }
+  },
+  "best_epoch": 8,
+  "best_validation_mae": 0.03229057224314302,
+  "history": [
+    {
+      "epoch": 1,
+      "train_mae": 0.7159327544825418,
+      "validation_mae": 0.03677644190212635
+    },
+    {
+      "epoch": 2,
+      "train_mae": 0.5968435561316354,
+      "validation_mae": 0.035550729107945205
+    },
+    {
+      "epoch": 3,
+      "train_mae": 0.5487321827411652,
+      "validation_mae": 0.03598795687465091
+    },
+    {
+      "epoch": 4,
+      "train_mae": 0.5268505464962551,
+      "validation_mae": 0.03292360738532184
+    },
+    {
+      "epoch": 5,
+      "train_mae": 0.5165101375579834,
+      "validation_mae": 0.03278289402550146
+    },
+    {
+      "epoch": 6,
+      "train_mae": 0.511695715870176,
+      "validation_mae": 0.032718135124778364
+    },
+    {
+      "epoch": 7,
+      "train_mae": 0.5084371302127838,
+      "validation_mae": 0.03282467373242797
+    },
+    {
+      "epoch": 8,
+      "train_mae": 0.5070994325365339,
+      "validation_mae": 0.03229057224314302
+    },
+    {
+      "epoch": 9,
+      "train_mae": 0.5071468662875039,
+      "validation_mae": 0.03268451361861675
+    },
+    {
+      "epoch": 10,
+      "train_mae": 0.5051025607585907,
+      "validation_mae": 0.03248953402518682
+    },
+    {
+      "epoch": 11,
+      "train_mae": 0.5062486709867204,
+      "validation_mae": 0.03260024239364416
+    },
+    {
+      "epoch": 12,
+      "train_mae": 0.5058726878506796,
+      "validation_mae": 0.03252868727274817
+    },
+    {
+      "epoch": 13,
+      "train_mae": 0.5065275185108185,
+      "validation_mae": 0.03260215943823802
+    },
+    {
+      "epoch": 14,
+      "train_mae": 0.5063607359613691,
+      "validation_mae": 0.03242182962332754
+    },
+    {
+      "epoch": 15,
+      "train_mae": 0.50611078950337,
+      "validation_mae": 0.03265581328472863
+    },
+    {
+      "epoch": 16,
+      "train_mae": 0.5061756431715829,
+      "validation_mae": 0.03249275089415921
+    },
+    {
+      "epoch": 17,
+      "train_mae": 0.5061203278132848,
+      "validation_mae": 0.0325141370862076
+    },
+    {
+      "epoch": 18,
+      "train_mae": 0.505515063217708,
+      "validation_mae": 0.03251327865131914
+    }
+  ],
+  "initial_weight_norm": 33.435638427734375,
+  "trained_weight_norm": 39.018978118896484,
+  "checkpoint_sha256": "ef2124f00da50f900834fa3de328dfb6969d55cbfc9f4665372e8c50e9062b59"
+}
