@@ -1,4 +1,4 @@
-# exp03：層別Eckart–Young–Mirsky近似による既存LSLの冗長性検証（計画・未実装）
+# exp03：層別Eckart–Young–Mirsky近似による既存LSLの冗長性検証（実装済み・本実験未実行）
 
 ## 1. 主目的と検証範囲
 
@@ -8,7 +8,7 @@
 
 前案からの改善は以下。
 
-- 冗長性の直接検証を主実験A〜Cとし、定期射影によるonline正則化は発展実験Dにする。
+- 冗長性の直接検証を主実験A〜Cとして実行する。
 - 第1層のみ・第2層のみ・両層の介入で、32→4→32のどこに近似誤差が生じるかを測る。
 - 特異値だけでなく、ReLU前後、LSL補正、残差加算後、最終予測までを測る。
 - LSL無効化対照と入力特徴の有効次元を追加し、元からLSLの寄与が小さい場合を識別する。
@@ -244,19 +244,7 @@ $$
 
 同じ座標系での部分空間距離と入力分布変化の関連は補助解析とする。有効rank増加だけをconcept driftの証拠とはせず、平均移動・基底回転・入力変化・後続誤差を併記する。
 
-## 8. 発展実験D：層別射影をonline正則化へ使う（任意）
-
-主実験の冗長性検証を完了する条件には含めない。実施する場合は結果に応じてrankを選抜せず、as_stored、両層rank $r\in\{2,4,8,16,32\}$、seed42〜46で実施する。
-
-Original、Frozen、Layerwise EYM、同rankのRandom projectionを比較する。AdamW stateは更新条件間で継続し、biasは通常のonline更新対象のまま。EYMは重みのみを中心化して射影する。hidden-unit整列やoptimizer resetは追加しない。
-
-主射影時点は**Awake週の最終stepの更新・予測が完了した後**。次stepから射影後重みを使う。1週672 stepでAwake/Hibernateが交互なので、0-basedの完了step 671,2015,3359,…、すなわち開始後672,2016,3360,…窓で射影する。毎暦週の射影とは区別する。教師は既存の遅延規則で解放済みのものだけを使う。
-
-各条件は実験Cと同じ初期状態から独立に分岐する。projection用乱数はSMB用と分離する。4指標と地点・週別誤差差、SVD追加時間、射影変位、GPU peak memoryを保存する。rank76の短い接続確認で、無射影の処理と数値的に一致することを検証する。
-
-改善が見られても、直ちに「過学習の除去」とは結論しない。急変地点での悪化も確認し、「本条件での射影による予測改善」と報告する。密な重みを更新して定期射影するため、更新対象数は22,484個のままである。
-
-## 9. パラメータ数と判定方法
+## 8. パラメータ数と判定方法
 
 ### 保持する数値の個数
 
@@ -292,7 +280,7 @@ $U_r\Sigma_r$ に特異値を吸収し、$\Sigma_r$ を重複保持しない場�
 
 5 seed平均±標本標準偏差（ddof=1）、同一seedの対応差、地点別・horizon別の誤差を報告する。WMAPEは同じ正解配列ではMAEの定数倍なので、独立した証拠として数えない。ゼロ基準値の相対差はnullとし絶対差を示す。多rank探索の最良値だけを結論にしない。必要な時系列区間推定は、予測窓を独立標本にせず、連続した週ブロックを各条件で同時に再標本化する補助解析として条件を明記する。
 
-## 10. 図と保存構成
+## 9. 図と保存構成
 
 MatplotlibでPNGを生成し、PDFは作らない。legendは図外、rankは実数値の位置（または明記した離散軸）、全図にseed数・条件・splitを記す。結果がない段階では図を作らない。
 
@@ -308,9 +296,8 @@ MatplotlibでPNGを生成し、PDFは作らない。legendは図外、rankは実
 |input_and_hidden_diagnostics.png|入力有効次元、hidden利用状況、補正RMS|
 |temporal_state_and_update_rank.png|状態・週更新・累積更新のrank推移|
 |fixed_basis_vs_dynamic_svd.png|warm-up固定基底の誤差と各時点の最適誤差|
-|online_projection_gain.png|任意Dを実行した場合のonline利得|
 
-以下は**実装後の予定構成**。現在の計画書に加えて、実行時に必要な成果物を生成する。
+以下は**実行時に生成する成果物の構成**。本実験結果はまだ生成していない。
 
 ~~~text
 experiments/exp03/
@@ -322,46 +309,34 @@ experiments/exp03/
 ├── metrics.json                        # A/B/Cの集計、seed別差、欠測条件
 ├── report.md                           # 結果、冗長性の根拠、限界
 ├── figures/                            # 上表のPNG（各図の元数値はJSON）
-├── seeds/
-│   └── seed<42..46>/
-│       ├── config.json                 # seedに展開した設定
-│       ├── manifest.json               # checkpoint参照、診断窓index
-│       ├── run.log
-│       ├── structure/
-│       │   ├── diagnostics.json        # 入力rank、局所SVD、hidden利用状況
-│       │   └── arrays/                 # 固定特徴、対応変換など。Git対象外
-│       ├── static/
-│       │   ├── as_stored/
-│       │   │   ├── spectra.json        # 各層のcentered/uncentered SVD
-│       │   │   ├── validation.json     # rank grid、片層介入、対照
-│       │   │   ├── online_frozen.json  # 更新なしの全期間評価
-│       │   │   └── arrays/             # 因子・診断配列。Git対象外
-│       │   └── aligned/                # 同構成＋関数同値変換の誤差
-│       └── trajectory/
-│           ├── metrics.json            # Originalのexp01照合・予測指標
-│           ├── snapshot_index.json     # step/時刻/phase/更新回数
-│           ├── spectra.json            # 状態・更新差分・固定基底誤差
-│           ├── intervention.json       # cloneしたsnapshotの関数診断
-│           └── arrays/                 # 週別LSL重み+bias。Git対象外
-└── extensions/                         # 任意Dを実行した場合だけ作成
-    └── projection/
-        ├── config.json                 # rank、射影時点、乱数、初期化
-        ├── metrics.json
-        └── seeds/seed<seed>/
-            ├── original/               # 設定一致を検証してCを参照可能
-            ├── frozen/
-            ├── eym/r<rank>/
-            └── random/r<rank>/projection_seed<0..2>/
-                ├── metrics.json
-                ├── diagnostics.json
-                └── arrays/             # 必要な診断配列。Git対象外
+└── seeds/
+    └── seed<42..46>/
+        ├── config.json                 # seedに展開した設定
+        ├── manifest.json               # checkpoint参照、診断窓index
+        ├── run.log
+        ├── structure/
+        │   ├── diagnostics.json        # 入力rank、局所SVD、hidden利用状況
+        │   └── arrays/                 # 必要な追加診断配列の保存先（任意）
+        ├── static/
+        │   ├── as_stored/
+        │   │   ├── spectra.json        # 各層のcentered/uncentered SVD
+        │   │   ├── validation.json     # rank grid、片層介入、対照
+        │   │   ├── online_frozen.json  # 更新なしの全期間評価
+        │   │   └── arrays/             # 因子・診断配列。Git対象外
+        │   └── aligned/                # 同構成＋関数同値変換の誤差
+        └── trajectory/
+            ├── metrics.json            # Originalのexp01照合・予測指標
+            ├── snapshot_index.json     # step/時刻/phase/更新回数
+            ├── spectra.json            # 状態・更新差分・固定基底誤差
+            ├── intervention.json       # cloneしたsnapshotの関数診断
+            └── arrays/                 # 週別LSL重み+bias。Git対象外
 ~~~
 
 checkpointはexp01を参照し、複製しない。全予測配列の恒久保存は既定で行わず、4指標・地点別/horizon別指標と必要な誤差集計を保存する。週別LSL snapshotは22,484個×4 bytesで1回約88KiB、約157回×5 seedで約67MiB（圧縮前、メタデータ・診断特徴を除く）。各条件の全モデルcheckpointを大量に作る必要はない。
 
-既存.gitignoreの /experiments/**/arrays/、/experiments/**/checkpoints/ を使用する。計画、集計JSON、report、PNG、run.logは追跡候補。strategy.md.orig はパッチのバックアップ用ファイルで正式成果物に含めず、自動生成しない。現時点でディスク上にあるのはstrategy.mdのみ。
+既存.gitignoreの /experiments/**/arrays/、/experiments/**/checkpoints/ を使用する。計画、集計JSON、report、PNG、run.logは追跡候補。strategy.md.orig はパッチのバックアップ用ファイルで正式成果物に含めず、自動生成しない。本実験の出力先は experiments/exp03/、接続確認の出力先は tmp/exp03-smoke/ とし、混在させない。
 
-## 11. 実施順序と検証
+## 10. 実施順序と検証
 
 1. データ・checkpoint・コード版を固定し、全rank・5 seed・対照をconfigへ記録する。
 2. 行列のflatten/復元、パラメータ数、bias保持、eval modeを確認する。
@@ -369,6 +344,52 @@ checkpointはexp01を参照し、複製しない。全予測配列の恒久保�
 4. alignedの関数同値性、入力射影合成の一致、ゼロ行列時の扱いを確認する。
 5. A、Bを5 seedで実行する。近似後のfine-tuningや新しいwarm-upは行わない。
 6. Cで既存online軌跡を再計測し、同じrank解析とsnapshot介入を行う。
-7. 主実験の結果をreportにまとめる。Dは拡張として別に実施・報告する。
+7. 主実験A〜Cの結果をreportにまとめる。
 
 主実験A〜Cは学習済みLSLの冗長性を直接調べる計画である。結論は「どちらの層を、どのrankまで、どの入力・時点で近似でき、補正関数と予測がどれほど保たれたか」という形で記述する。
+
+## 11. 実装と実行方法
+
+実行入口は [src/run_exp03.py](../../src/run_exp03.py)。実装は src/dol/exp03/ 内で数値処理、機能診断、静的評価、軌跡計測、保存、実行管理、作図に分ける。既存exp00〜02のモデル・online更新処理は共通実装を再利用する。
+
+最初に8窓・少数rankの接続確認を行う。smokeでは診断窓も最大8、軌跡snapshot間隔も4窓に短縮し、scope=smokeと記録する。本実験結果として扱わない。
+
+~~~bash
+uv run --offline --no-sync python src/run_exp03.py --run --smoke --seed 42 --device cpu
+~~~
+
+コード・計画をcommitした後、A〜Cを5 seedで実行する。本実験は未commitのコード変更があると停止する。
+
+~~~bash
+uv run --offline --no-sync python src/run_exp03.py --run
+~~~
+
+Aのみ、A+Bのみ、Cのみの実行もできる。同じ設定・コード・入力ハッシュの完了済み条件は再利用する。
+
+~~~bash
+uv run --offline --no-sync python src/run_exp03.py --run --stage spectra
+uv run --offline --no-sync python src/run_exp03.py --run --stage static
+uv run --offline --no-sync python src/run_exp03.py --run --stage trajectory
+~~~
+
+--seed 42 を付ければ1 seedだけを実行する。全5 seed・A〜Cが揃うまで全体のstatusはpartialとする。staticは条件単位、trajectoryの診断はsnapshot単位で再開できる。online適応そのものが中断した場合だけ --retry-failed を付け、旧trajectoryを attempts/ へ退避して最初から再実行する。optimizer/SMBの途中状態からの再開は行わない。
+
+~~~bash
+uv run --offline --no-sync python src/run_exp03.py --run --retry-failed
+uv run --offline --no-sync python src/run_exp03.py --plot
+~~~
+
+nohupではアプリがrun.logを書くため、重複する標準出力を破棄する。起動時のimportエラー等はnohup.errに残る。
+
+~~~bash
+nohup uv run --offline --no-sync python -u src/run_exp03.py --run > /dev/null 2> experiments/exp03/nohup.err &
+~~~
+
+同一出力先の同時実行はロックで拒否する。--output、--device、--batch-size、--diagnostic-count を変更する場合は、新しい出力先を指定する。コード・設定・入力が変わった成果物への上書き再開は拒否する。
+
+実装上の補足：
+
+- 入力manifestにcheckpointとexp01設定・指標、およびデータのSHA-256を保存する。
+- 全予測は集計中のみCPUメモリへ保持し、既存のNumPy評価関数を使う。恒久保存は行わないため、メモリは週別snapshotの約67MiBより多く必要となる。
+- 図はJSONから再生成可能。部分実行では存在する指標だけを描く。seed数、split、条件を確認して解釈する。
+- report.mdの自動集計領域は再生成する。手書きの考察は exp03-generated-results マーカーより前へ書く。
