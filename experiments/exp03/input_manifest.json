@@ -1,0 +1,36 @@
+{
+  "42": {
+    "checkpoint": "experiments/exp01/seeds/seed42/checkpoints/warmup.pt",
+    "checkpoint_sha256": "b6d371c59e79c495c5db24bd5f79a1924a360779f04f8e7e5a1850bb8aa68cb4",
+    "config_sha256": "f1f69d7709a11eda9d2adc0fbb2534a71b11cecb7e6bd9674d48cc3cca89a271",
+    "metrics_sha256": "c75da83c7f2162891dc5b7521b5a9dd7ca9ef6d15580c4bd06014443ca97bb23"
+  },
+  "43": {
+    "checkpoint": "experiments/exp01/seeds/seed43/checkpoints/warmup.pt",
+    "checkpoint_sha256": "1539c5641e6a30e079aacb2c00e56668e84ab155e1cb3552b8053e571243de0b",
+    "config_sha256": "80b92eadadb639dfb7d3792326d4fd4b09175014b895fba664da159df360b82a",
+    "metrics_sha256": "186905b4cf9af9d7ab42c0d3553652d648d2687123d932d21f1da19154a16e33"
+  },
+  "44": {
+    "checkpoint": "experiments/exp01/seeds/seed44/checkpoints/warmup.pt",
+    "checkpoint_sha256": "d0120475d96f73c401f7b1d1ca98959dc8322ca53a3d1db54807795d53048da4",
+    "config_sha256": "193e29b73f4f410fecd6c2ecd411da6cfe5c10dc79a9bee20d66b65078747e19",
+    "metrics_sha256": "b241ad0a439678db027e5421dd721c0a27345466f3597d64200d7f36292d29ba"
+  },
+  "45": {
+    "checkpoint": "experiments/exp01/seeds/seed45/checkpoints/warmup.pt",
+    "checkpoint_sha256": "d927557e06917adf2abd2796ae397d91c55b29d93eab3554b3236e87cbd7232b",
+    "config_sha256": "194cf025d1b8e3c1940e16904cb424d11e4a0368a1a33dd2e3a886d198eeecd2",
+    "metrics_sha256": "935fe7fce33f77ff65661d4ffe8b42097d564aaecddca9b78845a86ad79fdb72"
+  },
+  "46": {
+    "checkpoint": "experiments/exp01/seeds/seed46/checkpoints/warmup.pt",
+    "checkpoint_sha256": "51a3767f29416bb62da682ceec66ce6c662d9af0ec5161e55f72309a0eff1fc5",
+    "config_sha256": "0c170bf43d5e71fe2da4c8eb90d69c6b2d47c9be3f64e9d7d073e780c4b3970a",
+    "metrics_sha256": "586243d099219a63f14ab22985bfba51a8278b2b99a8b01eb04ff71dca92d5e2"
+  },
+  "data": {
+    "datasets/chicago-t/chicago20_23.npz": "13de14625961651a7c8288f762ae6ca1dbe5b2c9234376fff51b8ec6d3013f61",
+    "datasets/chicago-t/adj_chicago.npy": "78d1de583c0c84cda4b66ef19c845649d41e9ebb56d00fe57787f460987923a3"
+  }
+}

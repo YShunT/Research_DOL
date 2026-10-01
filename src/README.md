@@ -1,13 +1,13 @@
 # DOLを読みやすく再実装する
 
-このディレクトリは、DOL（Distribution-Aware Online Learning）の再実装と、exp02の低ランクLSL比較を含む研究コードである。以下の基本パイプラインと公開実装との照合はexp00/exp01の独立LSLについて説明する。
+このディレクトリは、DOLの再実装、exp02の低ランクLSL比較、exp03の層別SVDによる冗長性診断を含む。以下の基本パイプラインと公開実装との照合はexp00/exp01の独立LSLについて説明する。
 
 - `raw/DOL_original`を参照専用の互換基準とし、この再実装からはimportしない。
 - 公開実装の既定値、初期化順、学習、SMB、online更新の挙動を保つ。
 - データ、モデル、warm-up、online、評価を責務ごとのmoduleへ分け、読みやすくする。
 - 基本設定はdataclassで管理し、exp02のrank/seed選択など実行管理だけCLI引数を使う。
 - module内部で`.cuda()`を呼ばない。モデル、入力、グラフ支持行列を実行側で同じdeviceへ置く。
-- importしただけでは学習を開始しない。[`run_dol.py`](run_dol.py)、[`run_exp01.py`](run_exp01.py)、[`run_exp02.py`](run_exp02.py)を直接実行した場合だけ実験を開始する。
+- importしただけでは学習を開始しない。[run_dol.py](run_dol.py)、[run_exp01.py](run_exp01.py)、[run_exp02.py](run_exp02.py)、[run_exp03.py](run_exp03.py)が実験の入口。
 
 数式、Tensor形状、各クラスの役割、公開実装との差も本READMEにまとめる。
 
@@ -53,10 +53,20 @@ src/
 ├── run_dol.py
 ├── run_exp01.py
 ├── run_exp02.py
+├── run_exp03.py
 └── dol/
     ├── artifacts.py
     ├── multiseed.py
     ├── exp02.py
+    ├── exp03/
+    │   ├── __init__.py
+    │   ├── svd.py
+    │   ├── diagnostics.py
+    │   ├── evaluation.py
+    │   ├── trajectory.py
+    │   ├── storage.py
+    │   ├── runner.py
+    │   └── plots.py
     ├── config.py
     ├── pipeline.py
     ├── data/
@@ -98,7 +108,7 @@ DOL実験の入口である。全体の流れは次のようになる。
 ```python
 from run_dol import main
 
-main(experiment_name="exp03")  # 単発の独立LSL実験。exp02には使わない
+main(experiment_name="exp04")  # 単発の独立LSL実験。exp01〜03は専用の入口を使用
 ```
 
 引数なしなら次の`exp<ii>`を割り当て、番号を指定すれば未実行の同名ディレクトリを使う。`--reuse-checkpoint`付きなら完了済み番号のwarm-up checkpointを残し、旧ログ・指標を`attempts/`へ退避してonlineだけ再実行する。`if __name__ == "__main__":`の内側でだけ`main()`を呼ぶため、他のコードからimportしても実験は始まらない。
@@ -110,6 +120,22 @@ Chicago-Tのseed 42〜46を独立に実行する入口。`--retry-failed`を付�
 #### [`run_exp02.py`](run_exp02.py)
 
 低ランクLSLの全rank×5 seed・3条件の実験入口。`--run`で未完了試行を順次実行し、完了済みcheckpointと結果は検証して再利用する。`--seed`・`--rank`は一部を先に検証するときに使う。`--retry-failed`は失敗・中断した成果物を`attempts/`へ退避し、`--plot`は保存済み指標からPNGを生成する。`--distill`はexp01のLSL補正を固定バックボーンで近似する。実行条件とコマンドは[exp02の計画](../experiments/exp02/strategy.md)に記す。
+
+#### [run_exp03.py](run_exp03.py) と dol/exp03/
+
+学習済みLSLを層別SVDで調べる主実験A〜Cの入口。第1層・第2層の77×128行列を独立に近似し、再学習なしで関数・予測を比較する。実行・nohup・再開コマンドは[exp03の計画](../experiments/exp03/strategy.md)を参照。
+
+|モジュール|責務|
+|---|---|
+|svd.py|CPU float64のEYM近似、重み抽出・復元、隠れユニット整列|
+|diagnostics.py|入力次元、ReLU前後、LSL補正、関数同値性の診断|
+|evaluation.py|片層・両層・random・LSL bypassの更新なし予測比較|
+|trajectory.py|元online軌跡の保存と、終了後の重み・更新差分解析|
+|storage.py|原子的JSON保存、ハッシュ、条件記録、排他ロック|
+|runner.py|5 seedの実行順、初期化、再開、対応差の集計|
+|plots.py|保存JSONからMatplotlibのPNGを生成|
+
+online計測は既存pipelineを使用する。snapshot保存のcallbackはモデルやSMB乱数を変更せず、診断はonline処理完了後に実行する。接続確認はtmp/へ隔離し、本実験はコードと計画をcommitしてから実行する。
 
 #### [`dol/exp02.py`](dol/exp02.py)
 
@@ -462,7 +488,7 @@ from run_dol import main
 config = ExperimentConfig(
     artifacts=ArtifactConfig(save_predictions=True),
 )
-main(experiment_name="exp03", config=config)
+main(experiment_name="exp04", config=config)
 ```
 
 Chicago-T既定条件では予測と正解を合わせて大きな容量になるため、`save_predictions=False`が既定値である。
