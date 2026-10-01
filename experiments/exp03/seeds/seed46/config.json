@@ -1,0 +1,57 @@
+{
+  "data": {
+    "data_path": "datasets/chicago-t/chicago20_23.npz",
+    "adjacency_path": "datasets/chicago-t/adj_chicago.npy",
+    "num_nodes": 77,
+    "input_length": 12,
+    "forecast_horizon": 12,
+    "interval_minutes": 15,
+    "steps_per_week": 672,
+    "train_ratio": 0.2,
+    "validation_ratio": 0.05,
+    "online_ratio": 0.75
+  },
+  "model": {
+    "residual_channels": 32,
+    "dilation_channels": 32,
+    "skip_channels": 256,
+    "end_channels": 512,
+    "lsl_bottleneck_channels": 4,
+    "lsl_dropout": 0.5,
+    "graph_dropout": 0.3,
+    "adaptive_graph_rank": 10,
+    "diffusion_order": 2,
+    "fixed_support_count": 2,
+    "use_adaptive_graph": true,
+    "blocks": 4,
+    "layers_per_block": 2,
+    "temporal_kernel_size": 2
+  },
+  "warmup": {
+    "seed": 46,
+    "batch_size": 32,
+    "max_epochs": 150,
+    "patience": 10,
+    "learning_rate": 0.001,
+    "learning_rate_decay": 0.5,
+    "weight_decay": 0.01
+  },
+  "online": {
+    "batch_size": 1,
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "awake_weeks": 1,
+    "hibernate_weeks": 1,
+    "buffer_capacity": 1000,
+    "replay_size": 8,
+    "update_steps": 1
+  },
+  "runtime": {
+    "device": "cuda:0",
+    "deterministic": true
+  },
+  "artifacts": {
+    "experiments_root": "experiments/exp01/seeds",
+    "save_predictions": false
+  }
+}

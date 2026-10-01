@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "settings": {
+    "device": "cuda:0",
+    "batch_size": 32,
+    "diagnostic_count": 1024,
+    "smoke": false,
+    "threads": 1
+  },
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "ranks": [
+    0,
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    48,
+    64,
+    76
+  ],
+  "representations": [
+    "as_stored",
+    "aligned"
+  ],
+  "stages": [
+    "spectra",
+    "static",
+    "trajectory"
+  ],
+  "function_tolerance": 0.05,
+  "prediction_tolerance": 0.01,
+  "source": {
+    "commit": "80c247bbae5234d511c4349890d1ea157562b71b",
+    "dirty": false,
+    "sha256": {
+      "src/dol/artifacts.py": "c699cbc03e6a04ee0995856d227699c6922804c80a2692a9d713d4b6d117dabc",
+      "src/dol/config.py": "ed74366daab4545f701ee08c47a262a301d05749aaeb2b8823daa4d31d05a01d",
+      "src/dol/data/chicago.py": "b1c823e87ce635d30e515e1dd07f9a534d4e0dd6a26ec0e95e9362849ec5ef4d",
+      "src/dol/data/scaler.py": "df8c3d2e21c3bf17a9dd524989861b64b2e412326e7b8203dd8a2aedb8530e91",
+      "src/dol/data/windows.py": "17f62696d96a891957b671a8b8a2b743bb3b88d8aeebdbd2e19f55006c4a6b1e",
+      "src/dol/evaluation/exp02.py": "10e0c68218585660492e719f1242df06a7aa1ac81eb8c5f391ee189c0cfbd192",
+      "src/dol/evaluation/exp02_distill.py": "6453ea6c70ba3bd8e056d6ab48d785b2801b8589f59bfbbaddf74e8375da9ed4",
+      "src/dol/evaluation/exp02_plots.py": "59ab54008ed0cab217518f42f88a7a6818467713cb44ee0836eebd495973ee60",
+      "src/dol/evaluation/metrics.py": "69d54ad03a149fa717f202f17732803cd358da50fc2c46907a07a19cd83839b6",
+      "src/dol/exp02.py": "aebd5250e9ee75bc4f0540c76db0e47cc25ce589ac0d40baf98086de8e00c313",
+      "src/dol/exp03/__init__.py": "2b08dab92c7f16f46f9321a9fe7a1bd8044cde2c3f3444a3e02ddd71e0ad4823",
+      "src/dol/exp03/diagnostics.py": "87b609eee0482cc21844e812279728a61d15a4263899938918f5fd205ac1cdab",
+      "src/dol/exp03/evaluation.py": "3f8cb3d99a023e0fd5c908dcf94d0251228854b726d9ed082f8dbe1df5df9d91",
+      "src/dol/exp03/plots.py": "f224efbad9e0a86c5ab2da89f9b00fb6c3e52a5357d752a53b2e9eabf460f57a",
+      "src/dol/exp03/runner.py": "4251a6000d9f728a666070f983f72c5a0620fdd6a031e5062dde6499aa48971a",
+      "src/dol/exp03/storage.py": "9db17c7b0d5864baccd608299f8f077383593bb659da0cb460eb095aab4a2ad1",
+      "src/dol/exp03/svd.py": "0df2c4c2371bd9088c182adf31d4316e2803e81f009e0c79c7686d5c20448d1a",
+      "src/dol/exp03/trajectory.py": "b838217d745df755771cadf0ca85f54ab3230cbc0bdc6906e666ea7beddc8f63",
+      "src/dol/graph/supports.py": "bc4dbbbe5df885aaca04c9f6aa428e719b4076f31ad8dd979aec1c8454f9a124",
+      "src/dol/layers/LSL.py": "f21e7df9e5e53519e6550e188b8839f4c8a9c9f97326a952b4b1fdf6e74d403c",
+      "src/dol/layers/graph.py": "f54447895f520ced30b47fa68b77fc56844183763cd792d3639aa8bd14c0041b",
+      "src/dol/layers/graph_convolution.py": "0a6ea50af8f92324225473ae3c6daf39ceddc753915933d04df031bb4996d0fb",
+      "src/dol/layers/napl.py": "57234574fb90273d26c9273f4ba6a854278c47c5bbcf53f9e0f100ca34dc0c75",
+      "src/dol/models/dol.py": "e728dab6a616634ae0744bf7704dadc60965de62d310e91bd34cd06ed663986d",
+      "src/dol/multiseed.py": "10d866f90ac6886560b2f77e31a26668c6b667365d6a14c7f09308ac8d48d4d6",
+      "src/dol/online/adapter.py": "0a9e8b94e39e545ed41feb7cda07fad2eb1dfa0d4c441156030b6e7aed1569a1",
+      "src/dol/online/delay.py": "7d76c0e9d806fc24a80aedb67bad0aecd2c30fb97c22d4c6e29eb0b7e343fc10",
+      "src/dol/online/replay.py": "89f385ab137a955823a71a22d24bb6d26c91c35642e6dc636ff69a50e92f6239",
+      "src/dol/online/schedule.py": "923bf697ce5a5daa33797da9cb0e300e977b7327009c169b3af549a18b2158cb",
+      "src/dol/pipeline.py": "e51de2ea5fbf8155b2528f3054fb9a55ef43d560e86e058f305190b6622a7ab8",
+      "src/dol/training/losses.py": "61e5aa59567098068424e9a1d816c6c83221a8328b74debdcbbbf71442806807",
+      "src/dol/training/warmup.py": "807cd909118e570aef6ce65f19441ade29a9bc07becdec8a02802920219b7a9e",
+      "src/run_dol.py": "4acbcbc4b97e0ab359848052acdcf986510c3c5cdfd7295dd6601ce2a6b5542e",
+      "src/run_exp01.py": "6c2a703478c4ce2345e8d61dff1f3fc78c63181bb41c9851b8ef21fe575c6fd3",
+      "src/run_exp02.py": "867ed71994f765ee643e074ebced6974c2d7481c6ac9ccdecd394d5e0a707dc8",
+      "src/run_exp03.py": "28c05ff0aa4bb98c79c4517e3ee46b0bbbc96eaaf639ef955f50847db6ca9beb",
+      "pyproject.toml": "330968fc8ca080af5f315b66d87be14badd8692041d593981d3ef3457c51f002",
+      "uv.lock": "f3567dbc9ed2ea1cccc22708da96fd9afaa7f407b45d987760ecf36aadb1a871",
+      "experiments/exp03/strategy.md": "221940884fa22e511f93ae9208e9aa2d266eae43a73448e26e694a095bad4d34"
+    }
+  },
+  "scope": "full"
+}
